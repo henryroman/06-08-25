@@ -14,6 +14,7 @@ export interface CustomerData {
   Email: string;
   'Phone Number': string;
   'Customer Type': string;
+  'Communication History'?: string;
 }
 
 export interface AppointmentData {

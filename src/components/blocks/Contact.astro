@@ -135,14 +135,13 @@ const { layout, theme } = siteConfig;
             
             <div>
               <label for="message" class="block text-sm font-medium text-gray-700 mb-2">
-                Message <span class="text-red-500">*</span>
+                Message
               </label>
               <textarea
                 id="message"
                 name="message"
                 rows="5"
                 placeholder="Tell us how we can help you..."
-                required
                 class="${siteConfig.components.inputs.default} resize-none"
               ></textarea>
             </div>
@@ -184,10 +183,24 @@ const { layout, theme } = siteConfig;
       });
       
       if (res.ok) {
-        // Show success message
+        const result = await res.json();
+        console.log('Contact form response:', result);
+        
+        // Show success message with details
         submitButton.innerHTML = '<i class="fas fa-check mr-2"></i>Message Sent!';
         submitButton.classList.remove('bg-primary-600', 'hover:bg-primary-700');
         submitButton.classList.add('bg-green-600');
+        
+        // Show detailed success message
+        if (result.details) {
+          console.log('=== CONTACT FORM DETAILS ===');
+          console.log('Name:', result.details.name);
+          console.log('Email:', result.details.email);
+          console.log('Phone:', result.details.phone);
+          console.log('Message:', result.details.message);
+          console.log('Submitted At:', result.details.submittedAt);
+          console.log('===============================');
+        }
         
         setTimeout(() => {
           form.reset();
@@ -195,10 +208,11 @@ const { layout, theme } = siteConfig;
           submitButton.classList.remove('bg-green-600');
           submitButton.classList.add('bg-primary-600', 'hover:bg-primary-700');
           submitButton.disabled = false;
-        }, 2000);
+        }, 3000);
       } else {
         const err = await res.json();
-        alert('Error: ' + err.message);
+        console.error('Contact form error:', err);
+        alert('Error: ' + (err.message || 'Failed to send message'));
         submitButton.innerHTML = originalText;
         submitButton.disabled = false;
       }

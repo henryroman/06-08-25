@@ -332,11 +332,14 @@ declare global {
           }
         });
 
-        // Reset time selection when service changes
+        // Reset time selection when service changes (this is normal behavior)
         if (timeSelect) {
           timeSelect.innerHTML = '<option value="">Select a date first...</option>';
           (timeSelect as HTMLSelectElement).disabled = true;
         }
+        
+        // Ensure service options remain visible and properly styled
+        console.log('Service changed to:', selectedService ? selectedService.name : 'none');
       });
     });
   }
@@ -354,8 +357,16 @@ declare global {
         
         try {
           const duration = selectedService ? selectedService.duration : 60;
+          console.log('Loading availability for:', { date: selectedDate, duration });
+          
           const response = await fetch(`/api/availability?date=${selectedDate}&duration=${duration}`);
           const data = await response.json();
+          console.log('Availability response:', data);
+          
+          if (!data.success) {
+            throw new Error(data.message || 'Failed to load availability');
+          }
+          
           const slots = data.availableSlots || [];
           
           if (slots.length === 0) {
@@ -373,6 +384,10 @@ declare global {
         } catch (error) {
           console.error("Error loading times:", error);
           timeSelect.innerHTML = '<option value="">Error loading times</option>';
+          // Show more detailed error to user
+          setTimeout(() => {
+            timeSelect.innerHTML = '<option value="">Please try selecting date again</option>';
+          }, 2000);
         }
       }
     });
@@ -386,14 +401,26 @@ declare global {
       const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement;
       const originalText = submitButton.innerHTML;
       
+      // Validate all required fields before submission
+      const formData = new FormData(form);
+      const bookingData = Object.fromEntries(formData);
+      
+      // Check if all required fields are present
+      const requiredFields = ['name', 'email', 'phone', 'appointmentType', 'date', 'time'];
+      const missingFields = requiredFields.filter(field => !bookingData[field]);
+      
+      if (missingFields.length > 0) {
+        alert(`Please fill in all required fields: ${missingFields.join(', ')}`);
+        return;
+      }
+      
       // Show loading state
       submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Booking...';
       submitButton.disabled = true;
 
-      const formData = new FormData(form);
-      const bookingData = Object.fromEntries(formData);
-
       try {
+        console.log('Submitting booking data:', bookingData);
+        
         const response = await fetch("/api/booking", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -401,6 +428,7 @@ declare global {
         });
 
         const result = await response.json();
+        console.log('Booking response:', result);
 
         if (response.ok && result.success) {
           // Show success message
