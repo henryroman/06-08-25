@@ -3,6 +3,8 @@ import Layout from '../../layouts/Layout.astro';
 import { siteConfig } from '../../../config/site.config.mjs';
 import business from '../../data/business.json';
 import { slugify } from '../../utils/string';
+import GoogleReviews from '@/components/blocks/Google-Reviews.astro';
+import image from "../../../public/NailSalonB.png";
 
 const { slug } = Astro.params;
 const service = siteConfig.appointments.types.find(
@@ -13,14 +15,30 @@ if (!service) {
   throw new Error(`Service not found: ${slug}`);
 }
 ---
+
 <Layout title={`${service.name} – ${business.name}`}>
-  <section class="py-16">
-    <div class="container mx-auto px-4">
-      <h1 class="text-4xl font-bold mb-4">{service.name}</h1>
-      <p class="text-lg mb-2">Duration: {service.duration} minutes</p>
-      <p class="text-lg mb-4">Price: {service.price || 'Contact us'}</p>
-      <p class="mb-6">{business.description}</p>
-      <a href="/#booking" class="bg-pink-500 text-white px-4 py-2 rounded">Book Now</a>
+  <section class="flex justify-center py-16">
+    <div class="card w-96 bg-base-100 shadow-xl">
+      <figure class="px-4 pt-4 rounded:xl">
+          <img src={image.src} class="w-60 h-60" />
+      </figure>
+      <div class="card-body items-start text-left">
+        <h2 class="card-title">{service.name}</h2>
+        <p class="text-sm text-gray-500">Duration: {service.duration} min</p>
+        <p class="text-sm text-gray-500">
+          Price: {service.price || 'Contact us'}
+        </p>
+        <p class="mt-2">{business.description}</p>
+        <div class="card-actions mt-4">
+          <a
+            href="/#booking"
+            class="btn btn-primary w-full"
+          >
+            Book Now
+          </a>
+        </div>
+      </div>
     </div>
   </section>
+  <GoogleReviews />
 </Layout>

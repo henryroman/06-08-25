@@ -10,7 +10,7 @@ const reviews = (business.reviews || []) as Array<{
 {reviews.length > 0 && (
   <section class="google-reviews py-16 bg-white">
     <div class="container mx-auto px-4">
-      <h2 class="text-3xl font-bold mb-6">What Our Customers Say</h2>
+      <h2 class="text-3xl font-bold mb-6 text-center">What Our Customers Say</h2>
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {reviews.map((review) => (
           <div class="p-6 border rounded-lg shadow-sm bg-gray-50">
