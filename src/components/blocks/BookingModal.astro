@@ -1,6 +1,7 @@
 ---
 import { siteConfig } from "../../../config/site.config.mjs";
 const { components, theme } = siteConfig;
+
 declare global {
   interface Window {
     openBookingModal: () => void;
@@ -11,125 +12,189 @@ declare global {
 
 <!-- Modal Overlay -->
 <div id="booking" class="fixed inset-0 z-50 hidden">
-  <div class="${components.modals.overlay} fixed inset-0" onclick="window.closeBookingModal && window.closeBookingModal()"></div>
+  <!-- Backdrop -->
+  <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300" onclick="window.closeBookingModal && window.closeBookingModal()"></div>
   
-  <!-- Modal Content -->
-  <div class="fixed inset-0 flex items-center justify-center p-4">
-    <div class="${components.modals.content} animate-slideUp">
+  <!-- Modal Container -->
+  <div class="fixed inset-0 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+    <!-- Modal Content -->
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
       <!-- Modal Header -->
-      <div class="${components.modals.header}">
+      <div class="bg-gradient-to-r from-primary-600 to-secondary-600 px-6 py-6 sm:px-8 sm:py-8">
         <div class="flex items-center justify-between">
-          <h3 class="text-2xl font-bold text-gray-900 flex items-center">
-            <i class="fas fa-calendar-check text-primary-600 mr-3"></i>
-            Book Your Appointment
-          </h3>
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <i class="fas fa-calendar-check text-white text-xl"></i>
+            </div>
+            <div>
+              <h3 class="text-2xl sm:text-3xl font-bold text-white">Book Your Appointment</h3>
+              <p class="text-primary-100 text-sm sm:text-base mt-1">Schedule your visit with our experts</p>
+            </div>
+          </div>
           <button 
             onclick="window.closeBookingModal && window.closeBookingModal()"
-            class="text-gray-400 hover:text-gray-600 transition-colors"
+            class="w-10 h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center transition-all duration-200 group"
+            aria-label="Close modal"
           >
-            <i class="fas fa-times text-xl"></i>
+            <i class="fas fa-times text-white text-lg group-hover:rotate-90 transition-transform duration-200"></i>
           </button>
         </div>
       </div>
       
       <!-- Modal Body -->
-      <div class="${components.modals.body}">
+      <div class="px-6 py-6 sm:px-8 sm:py-8 max-h-[calc(90vh-200px)] overflow-y-auto">
         <form id="booking-form" class="space-y-8">
-          <!-- Personal Information -->
-          <div class="space-y-6">
-            <h4 class="text-lg font-semibold text-gray-900 flex items-center">
-              <i class="fas fa-user text-primary-600 mr-2"></i>
-              Your Information
-            </h4>
-            <div class="grid md:grid-cols-2 gap-6">
-              <div>
-                <label for="booking-name" class="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name <span class="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="booking-name"
-                  name="name"
-                  placeholder="Enter your full name"
-                  required
-                  class="${components.inputs.default}"
-                />
-              </div>
-              <div>
-                <label for="booking-email" class="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address <span class="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  id="booking-email"
-                  name="email"
-                  placeholder="Enter your email address"
-                  required
-                  class="${components.inputs.default}"
-                />
-              </div>
+          <!-- Progress Steps -->
+          <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center space-x-4 flex-1">
+              <div class="step-indicator w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">1</div>
+              <div class="flex-1 h-1 bg-primary-600 rounded"></div>
             </div>
-            <div>
-              <label for="booking-phone" class="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number <span class="text-red-500">*</span>
-              </label>
-              <input
-                type="tel"
-                id="booking-phone"
-                name="phone"
-                placeholder="Enter your phone number"
-                required
-                class="${components.inputs.default}"
-              />
+            <div class="flex items-center space-x-4 flex-1">
+              <div class="step-indicator w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-semibold">2</div>
+              <div class="flex-1 h-1 bg-gray-300 rounded"></div>
+            </div>
+            <div class="flex items-center space-x-4 flex-1">
+              <div class="step-indicator w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-semibold">3</div>
+              <div class="flex-1 h-1 bg-gray-300 rounded"></div>
             </div>
           </div>
           
-          <!-- Service Selection -->
-          <div class="space-y-6">
-            <h4 class="text-lg font-semibold text-gray-900 flex items-center">
-              <i class="fas fa-spa text-primary-600 mr-2"></i>
-              Select Service
-            </h4>
-            <div id="services-container" class="grid gap-4">
-              <div class="text-center py-8">
+          <!-- Step 1: Personal Information -->
+          <div class="form-section" data-step="1">
+            <div class="mb-6">
+              <h4 class="text-xl font-semibold text-gray-900 flex items-center mb-2">
+                <i class="fas fa-user text-primary-600 mr-3"></i>
+                Your Information
+              </h4>
+              <p class="text-gray-600">Please provide your contact details</p>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div class="form-group">
+                <label for="booking-name" class="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-user text-gray-400"></i>
+                  </div>
+                  <input
+                    type="text"
+                    id="booking-name"
+                    name="name"
+                    placeholder="Enter your full name"
+                    required
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
+                  />
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="booking-email" class="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-envelope text-gray-400"></i>
+                  </div>
+                  <input
+                    type="email"
+                    id="booking-email"
+                    name="email"
+                    placeholder="Enter your email address"
+                    required
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="booking-phone" class="block text-sm font-medium text-gray-700 mb-2">
+                Phone Number <span class="text-red-500">*</span>
+              </label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i class="fas fa-phone text-gray-400"></i>
+                </div>
+                <input
+                  type="tel"
+                  id="booking-phone"
+                  name="phone"
+                  placeholder="Enter your phone number"
+                  required
+                  class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
+                />
+              </div>
+            </div>
+          </div>
+          
+          <!-- Step 2: Service Selection -->
+          <div class="form-section" data-step="2">
+            <div class="mb-6">
+              <h4 class="text-xl font-semibold text-gray-900 flex items-center mb-2">
+                <i class="fas fa-spa text-primary-600 mr-3"></i>
+                Select Service
+              </h4>
+              <p class="text-gray-600">Choose the treatment you'd like to book</p>
+            </div>
+            
+            <div id="services-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="col-span-full text-center py-8">
                 <i class="fas fa-spinner fa-spin text-3xl text-primary-600 mb-4"></i>
                 <p class="text-gray-600">Loading services...</p>
               </div>
             </div>
           </div>
           
-          <!-- Date & Time Selection -->
-          <div class="space-y-6">
-            <h4 class="text-lg font-semibold text-gray-900 flex items-center">
-              <i class="fas fa-calendar-alt text-primary-600 mr-2"></i>
-              Choose Date & Time
-            </h4>
-            <div class="grid md:grid-cols-2 gap-6">
-              <div>
+          <!-- Step 3: Date & Time Selection -->
+          <div class="form-section" data-step="3">
+            <div class="mb-6">
+              <h4 class="text-xl font-semibold text-gray-900 flex items-center mb-2">
+                <i class="fas fa-calendar-alt text-primary-600 mr-3"></i>
+                Choose Date & Time
+              </h4>
+              <p class="text-gray-600">Select your preferred appointment time</p>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div class="form-group">
                 <label for="appointment-date" class="block text-sm font-medium text-gray-700 mb-2">
                   Preferred Date <span class="text-red-500">*</span>
                 </label>
-                <input
-                  type="date"
-                  id="appointment-date"
-                  name="date"
-                  required
-                  class="${components.inputs.default}"
-                />
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-calendar text-gray-400"></i>
+                  </div>
+                  <input
+                    type="date"
+                    id="appointment-date"
+                    name="date"
+                    required
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
+                  />
+                </div>
               </div>
-              <div>
+              
+              <div class="form-group">
                 <label for="appointment-time" class="block text-sm font-medium text-gray-700 mb-2">
                   Preferred Time <span class="text-red-500">*</span>
                 </label>
-                <select
-                  id="appointment-time"
-                  name="time"
-                  required
-                  class="${components.inputs.default} disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  disabled
-                >
-                  <option value="">Select a date first...</option>
-                </select>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-clock text-gray-400"></i>
+                  </div>
+                  <select
+                    id="appointment-time"
+                    name="time"
+                    required
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    disabled
+                  >
+                    <option value="">Select a date first...</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
@@ -137,12 +202,12 @@ declare global {
       </div>
       
       <!-- Modal Footer -->
-      <div class="${components.modals.footer}">
-        <div class="flex gap-4">
+      <div class="border-t border-gray-200 px-6 py-4 sm:px-8 sm:py-6 bg-gray-50">
+        <div class="flex flex-col sm:flex-row gap-4">
           <button
             type="button"
             onclick="window.closeBookingModal && window.closeBookingModal()"
-            class="${components.buttons.outline} flex-1"
+            class="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-all duration-200 font-medium"
           >
             <i class="fas fa-times mr-2"></i>
             Cancel
@@ -150,7 +215,7 @@ declare global {
           <button
             type="submit"
             form="booking-form"
-            class="${components.buttons.primary} flex-1"
+            class="flex-1 px-6 py-3 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-lg hover:from-primary-700 hover:to-secondary-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
           >
             <i class="fas fa-check mr-2"></i>
             Book Appointment
@@ -165,12 +230,14 @@ declare global {
   // Global state
   let availableServices = [];
   let selectedService = null;
+  let currentStep = 1;
 
-  // DOM elements
-  const form = document.getElementById("booking-form");
-  const dateInput = document.getElementById("appointment-date");
-  const timeSelect = document.getElementById("appointment-time");
+  // DOM elements with proper typing
+  const form = document.getElementById("booking-form") as HTMLFormElement | null;
+  const dateInput = document.getElementById("appointment-date") as HTMLInputElement | null;
+  const timeSelect = document.getElementById("appointment-time") as HTMLSelectElement | null;
   const servicesContainer = document.getElementById("services-container");
+  const modalContent = document.getElementById("modal-content");
 
   // Set minimum date to today
   if (dateInput) {
@@ -219,12 +286,12 @@ declare global {
     if (!servicesContainer) return;
 
     servicesContainer.innerHTML = availableServices.map((service, index) => `
-      <label class="service-option group flex items-center p-6 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-primary-300 hover:bg-primary-50 transition-all duration-200">
+      <label class="service-option group flex flex-col sm:flex-row items-start sm:items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-primary-300 hover:bg-primary-50 transition-all duration-200 gap-4">
         <input type="radio" name="appointmentType" value="${service.name}" data-duration="${service.duration}" class="sr-only" required />
-        <div class="service-indicator w-6 h-6 border-2 border-gray-300 rounded-full mr-4 flex-shrink-0 transition-all duration-200"></div>
-        <div class="flex-1">
-          <div class="flex justify-between items-start">
-            <div>
+        <div class="service-indicator w-6 h-6 border-2 border-gray-300 rounded-full flex-shrink-0 transition-all duration-200 mt-1 sm:mt-0"></div>
+        <div class="flex-1 min-w-0">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+            <div class="flex-1">
               <h5 class="font-semibold text-gray-900 text-lg group-hover:text-primary-600 transition-colors">
                 ${service.name}
               </h5>
@@ -234,7 +301,7 @@ declare global {
               </p>
               ${service.description ? `<p class="text-sm text-gray-500 mt-1">${service.description}</p>` : ''}
             </div>
-            <span class="text-xl font-bold text-primary-600">
+            <span class="text-xl font-bold text-primary-600 whitespace-nowrap">
               ${service.price}
             </span>
           </div>
@@ -268,7 +335,7 @@ declare global {
         // Reset time selection when service changes
         if (timeSelect) {
           timeSelect.innerHTML = '<option value="">Select a date first...</option>';
-          timeSelect.disabled = true;
+          (timeSelect as HTMLSelectElement).disabled = true;
         }
       });
     });
@@ -282,7 +349,7 @@ declare global {
       if (!selectedDate) return;
       
       if (timeSelect) {
-        timeSelect.disabled = true;
+        (timeSelect as HTMLSelectElement).disabled = true;
         timeSelect.innerHTML = '<option value="">Loading available times...</option>';
         
         try {
@@ -302,7 +369,7 @@ declare global {
               timeSelect.appendChild(option);
             });
           }
-          timeSelect.disabled = false;
+          (timeSelect as HTMLSelectElement).disabled = false;
         } catch (error) {
           console.error("Error loading times:", error);
           timeSelect.innerHTML = '<option value="">Error loading times</option>';
@@ -338,8 +405,8 @@ declare global {
         if (response.ok && result.success) {
           // Show success message
           submitButton.innerHTML = '<i class="fas fa-check mr-2"></i>Booked Successfully!';
-          submitButton.classList.remove('bg-primary-600', 'hover:bg-primary-700');
-          submitButton.classList.add('bg-green-600');
+          submitButton.classList.remove('from-primary-600', 'to-secondary-600');
+          submitButton.classList.add('from-green-600', 'to-green-700');
           
           setTimeout(() => {
             form.reset();
@@ -348,8 +415,8 @@ declare global {
             }
             // Reset button state
             submitButton.innerHTML = originalText;
-            submitButton.classList.remove('bg-green-600');
-            submitButton.classList.add('bg-primary-600', 'hover:bg-primary-700');
+            submitButton.classList.remove('from-green-600', 'to-green-700');
+            submitButton.classList.add('from-primary-600', 'to-secondary-600');
             submitButton.disabled = false;
             
             // Reset service selection visuals
@@ -365,7 +432,7 @@ declare global {
             // Reset time select
             if (timeSelect) {
               timeSelect.innerHTML = '<option value="">Select a date first...</option>';
-              timeSelect.disabled = true;
+              (timeSelect as HTMLSelectElement).disabled = true;
             }
             
             // Reset selected service
@@ -391,6 +458,15 @@ declare global {
     if (modal) {
       modal.classList.remove("hidden");
       document.body.style.overflow = "hidden";
+      
+      // Animate modal in
+      setTimeout(() => {
+        if (modalContent) {
+          modalContent.classList.remove("scale-95", "opacity-0");
+          modalContent.classList.add("scale-100", "opacity-100");
+        }
+      }, 10);
+      
       // Load services when modal opens
       loadServices();
     }
@@ -399,8 +475,16 @@ declare global {
   (window as any).closeBookingModal = () => {
     const modal = document.getElementById("booking");
     if (modal) {
-      modal.classList.add("hidden");
-      document.body.style.overflow = "auto";
+      // Animate modal out
+      if (modalContent) {
+        modalContent.classList.remove("scale-100", "opacity-100");
+        modalContent.classList.add("scale-95", "opacity-0");
+      }
+      
+      setTimeout(() => {
+        modal.classList.add("hidden");
+        document.body.style.overflow = "auto";
+      }, 300);
     }
   };
 
@@ -415,8 +499,62 @@ declare global {
 <style>
   .service-indicator {
     transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  }
+  
+  .form-group {
+    transition: all 0.2s ease;
+  }
+  
+  .form-group:focus-within {
+    transform: translateY(-2px);
+  }
+  
+  .form-section {
+    animation: fadeInUp 0.5s ease-out;
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Mobile-first responsive design */
+  @media (max-width: 640px) {
+    .service-option {
+      padding: 1rem;
+    }
+    
+    .service-option h5 {
+      font-size: 1.125rem;
+    }
+    
+    .service-option .text-xl {
+      font-size: 1.125rem;
+    }
+  }
+  
+  /* Custom scrollbar for modal content */
+  .overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
   }
 </style>

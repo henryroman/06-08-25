@@ -96,16 +96,26 @@
       height: '4rem',
       background: 'bg-white',
       shadow: 'shadow-md',
-      sticky: true
+      sticky: true,
+      mobile: {
+        height: '3.5rem',
+        padding: 'px-4'
+      }
     },
     footer: {
       background: 'bg-gray-50',
       padding: 'py-12',
-      borderTop: 'border-t border-gray-200'
+      borderTop: 'border-t border-gray-200',
+      mobile: {
+        padding: 'py-8'
+      }
     },
     sections: {
       padding: 'py-16 lg:py-24',
-      maxWidth: 'max-w-7xl mx-auto'
+      maxWidth: 'max-w-7xl mx-auto',
+      mobile: {
+        padding: 'py-12 lg:py-16'
+      }
     }
   },
 
@@ -113,25 +123,34 @@
   components: {
     buttons: {
       primary: 'bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl',
+      primaryMobile: 'bg-primary-600 hover:bg-primary-700 text-white font-medium py-4 px-8 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl w-full',
       secondary: 'bg-secondary-600 hover:bg-secondary-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200',
       outline: 'border-2 border-primary-600 text-primary-600 hover:bg-primary-50 font-medium py-3 px-6 rounded-lg transition-all duration-200',
       ghost: 'text-primary-600 hover:bg-primary-50 font-medium py-2 px-4 rounded-lg transition-all duration-200'
     },
     cards: {
       default: 'bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100',
+      defaultMobile: 'bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-4 border border-gray-100',
       featured: 'bg-gradient-to-br from-primary-50 to-secondary-50 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 p-8 border border-primary-100',
-      minimal: 'bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-4'
+      featuredMobile: 'bg-gradient-to-br from-primary-50 to-secondary-50 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 p-6 border border-primary-100',
+      minimal: 'bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-4',
+      minimalMobile: 'bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-3'
     },
     inputs: {
       default: 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200',
+      defaultMobile: 'w-full px-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 text-lg',
       focused: 'w-full px-4 py-3 border-2 border-primary-500 rounded-lg focus:ring-2 focus:ring-primary-300 focus:border-primary-500 transition-all duration-200'
     },
     modals: {
       overlay: 'bg-black bg-opacity-50 backdrop-blur-sm',
-      content: 'bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto',
-      header: 'border-b border-gray-200 px-6 py-4',
-      body: 'px-6 py-4',
-      footer: 'border-t border-gray-200 px-6 py-4'
+      content: 'bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden',
+      contentMobile: 'bg-white rounded-2xl shadow-2xl w-full mx-2 max-h-[95vh] overflow-hidden',
+      header: 'bg-gradient-to-r from-primary-600 to-secondary-600 px-6 py-6 sm:px-8 sm:py-8',
+      headerMobile: 'bg-gradient-to-r from-primary-600 to-secondary-600 px-4 py-4',
+      body: 'px-6 py-6 sm:px-8 sm:py-8 max-h-[calc(90vh-200px)] overflow-y-auto',
+      bodyMobile: 'px-4 py-4 max-h-[calc(95vh-180px)] overflow-y-auto',
+      footer: 'border-t border-gray-200 px-6 py-4 sm:px-8 sm:py-6 bg-gray-50',
+      footerMobile: 'border-t border-gray-200 px-4 py-3 bg-gray-50'
     }
   },
 
