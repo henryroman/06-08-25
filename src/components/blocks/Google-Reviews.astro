@@ -1,7 +1,8 @@
 ---
 import { siteConfig } from '../../../config/site.config.mjs';
 import business from '../../data/business.json';
-const { testimonials, layout } = siteConfig.content;
+const { testimonials } = siteConfig.content;
+const { layout } = siteConfig;
 const reviews = (business.reviews || testimonials || []) as Array<{
   author: string;
   rating: number;
