@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile View Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom animations */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-slideUp {
+            animation: slideUp 0.6s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Test the responsive pricing grid -->
+    <div class="container mx-auto px-4 py-8">
+        <h2 class="text-3xl font-bold text-center mb-8">Mobile View Test</h2>
+        
+        <!-- Services Grid (testing the fixed responsive design) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto px-4 sm:px-6">
+            <!-- Service Card 1 -->
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl md:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 md:p-8 border border-purple-100 group hover:transform hover:scale-105 animate-slideUp">
+                <div class="text-center">
+                    <!-- Service Icon -->
+                    <div class="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:shadow-lg transition-all duration-300">
+                        <i class="fas fa-spa text-2xl md:text-3xl text-purple-600"></i>
+                    </div>
+                    
+                    <!-- Service Name -->
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-2 md:mb-3 group-hover:text-purple-600 transition-colors">
+                        Manicure
+                    </h3>
+                    
+                    <!-- Service Description -->
+                    <p class="text-sm md:text-base text-gray-600 mb-4 md:mb-6 leading-relaxed">
+                        Classic manicure with nail polish
+                    </p>
+                    
+                    <!-- Duration -->
+                    <div class="flex items-center justify-center mb-3 md:mb-4">
+                        <i class="fas fa-clock text-purple-600 mr-2 text-sm md:text-base"></i>
+                        <span class="text-gray-700 font-medium text-sm md:text-base">45 minutes</span>
+                    </div>
+                    
+                    <!-- Price -->
+                    <div class="mb-4 md:mb-6">
+                        <span class="text-3xl md:text-4xl font-bold text-purple-600">
+                            $45
+                        </span>
+                    </div>
+                    
+                    <!-- Book Button -->
+                    <button class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 md:py-3 px-4 md:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl w-full text-sm md:text-base group-hover:shadow-lg transition-all duration-300">
+                        <i class="fas fa-calendar-check mr-1 md:mr-2"></i>
+                        Book Now
+                    </button>
+                </div>
+            </div>
+
+            <!-- Service Card 2 -->
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl md:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 md:p-8 border border-purple-100 group hover:transform hover:scale-105 animate-slideUp" style="animation-delay: 0.1s">
+                <div class="text-center">
+                    <!-- Service Icon -->
+                    <div class="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:shadow-lg transition-all duration-300">
+                        <i class="fas fa-spa text-2xl md:text-3xl text-purple-600"></i>
+                    </div>
+                    
+                    <!-- Service Name -->
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-2 md:mb-3 group-hover:text-purple-600 transition-colors">
+                        Pedicure
+                    </h3>
+                    
+                    <!-- Service Description -->
+                    <p class="text-sm md:text-base text-gray-600 mb-4 md:mb-6 leading-relaxed">
+                        Relaxing pedicure with foot massage
+                    </p>
+                    
+                    <!-- Duration -->
+                    <div class="flex items-center justify-center mb-3 md:mb-4">
+                        <i class="fas fa-clock text-purple-600 mr-2 text-sm md:text-base"></i>
+                        <span class="text-gray-700 font-medium text-sm md:text-base">60 minutes</span>
+                    </div>
+                    
+                    <!-- Price -->
+                    <div class="mb-4 md:mb-6">
+                        <span class="text-3xl md:text-4xl font-bold text-purple-600">
+                            $55
+                        </span>
+                    </div>
+                    
+                    <!-- Book Button -->
+                    <button class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 md:py-3 px-4 md:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl w-full text-sm md:text-base group-hover:shadow-lg transition-all duration-300">
+                        <i class="fas fa-calendar-check mr-1 md:mr-2"></i>
+                        Book Now
+                    </button>
+                </div>
+            </div>
+
+            <!-- Service Card 3 -->
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl md:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 md:p-8 border border-purple-100 group hover:transform hover:scale-105 animate-slideUp" style="animation-delay: 0.2s">
+                <div class="text-center">
+                    <!-- Service Icon -->
+                    <div class="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 group-hover:shadow-lg transition-all duration-300">
+                        <i class="fas fa-spa text-2xl md:text-3xl text-purple-600"></i>
+                    </div>
+                    
+                    <!-- Service Name -->
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-2 md:mb-3 group-hover:text-purple-600 transition-colors">
+                        Facial Treatment
+                    </h3>
+                    
+                    <!-- Service Description -->
+                    <p class="text-sm md:text-base text-gray-600 mb-4 md:mb-6 leading-relaxed">
+                        Deep cleansing facial treatment
+                    </p>
+                    
+                    <!-- Duration -->
+                    <div class="flex items-center justify-center mb-3 md:mb-4">
+                        <i class="fas fa-clock text-purple-600 mr-2 text-sm md:text-base"></i>
+                        <span class="text-gray-700 font-medium text-sm md:text-base">90 minutes</span>
+                    </div>
+                    
+                    <!-- Price -->
+                    <div class="mb-4 md:mb-6">
+                        <span class="text-3xl md:text-4xl font-bold text-purple-600">
+                            $85
+                        </span>
+                    </div>
+                    
+                    <!-- Book Button -->
+                    <button class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 md:py-3 px-4 md:px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl w-full text-sm md:text-base group-hover:shadow-lg transition-all duration-300">
+                        <i class="fas fa-calendar-check mr-1 md:mr-2"></i>
+                        Book Now
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Viewport size indicator -->
+        <div class="mt-8 p-4 bg-white rounded-lg shadow">
+            <h3 class="font-bold mb-2">Responsive Design Test:</h3>
+            <p class="text-sm text-gray-600">Resize your browser window to test different viewport sizes:</p>
+            <ul class="text-sm text-gray-600 mt-2">
+                <li>• <strong>Mobile (&lt;640px):</strong> Single column layout</li>
+                <li>• <strong>Tablet (640px-1024px):</strong> Two column layout</li>
+                <li>• <strong>Desktop (&gt;1024px):</strong> Three column layout</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Log viewport size changes
+        function logViewportSize() {
+            const width = window.innerWidth;
+            let size = 'mobile';
+            if (width >= 1024) size = 'desktop';
+            else if (width >= 640) size = 'tablet';
+            
+            console.log(`Viewport: ${width}px (${size})`);
+        }
+
+        window.addEventListener('resize', logViewportSize);
+        logViewportSize(); // Initial log
+    </script>
+</body>
+</html>

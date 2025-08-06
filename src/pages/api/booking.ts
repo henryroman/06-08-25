@@ -159,30 +159,60 @@ async function createAppointmentDynamic(notion: Client, appointmentsDbId: string
     
     // Get available status options if status field exists
     let availableStatuses: string[] = [];
-    if (schema['Status'] || schema['status']) {
-      try {
-        const db = await notion.databases.retrieve({ database_id: appointmentsDbId });
-        const statusField = (db.properties as any)['Status'] || (db.properties as any)['status'];
-        if (statusField && statusField.status && statusField.status.options) {
-          availableStatuses = statusField.status.options.map((opt: any) => opt.name);
+    let statusFieldName = '';
+    
+    // Check for status field with different possible names
+    const statusFieldNames = ['Status', 'status', 'Appointment Status', 'Booking Status'];
+    for (const fieldName of statusFieldNames) {
+      if (schema[fieldName]) {
+        statusFieldName = fieldName;
+        try {
+          const db = await notion.databases.retrieve({ database_id: appointmentsDbId });
+          const statusField = (db.properties as any)[fieldName];
+          if (statusField && statusField.status && statusField.status.options) {
+            availableStatuses = statusField.status.options.map((opt: any) => opt.name);
+            console.log(`Available statuses for ${fieldName}:`, availableStatuses);
+            break;
+          }
+        } catch (error) {
+          console.log(`Could not fetch status options for ${fieldName}, trying next field`);
         }
-      } catch (error) {
-        console.log('Could not fetch status options, using default');
       }
     }
     
-    // Use first available status or default to a common one
-    const status = availableStatuses.length > 0 ? availableStatuses[0] : 'Not Started';
+    // Use first available status or skip status field entirely
+    let statusValue;
+    if (availableStatuses.length > 0) {
+      // Try to find a suitable status (look for common patterns)
+      const suitableStatuses = availableStatuses.filter(s => 
+        s.toLowerCase().includes('not started') || 
+        s.toLowerCase().includes('todo') || 
+        s.toLowerCase().includes('to do') ||
+        s.toLowerCase().includes('pending') ||
+        s.toLowerCase().includes('new') ||
+        s.toLowerCase().includes('open')
+      );
+      
+      statusValue = suitableStatuses.length > 0 ? suitableStatuses[0] : availableStatuses[0];
+      console.log(`Using status: ${statusValue}`);
+    } else {
+      console.log('No status field found or no available statuses, skipping status assignment');
+      statusValue = null;
+    }
     
-    const appointmentData = {
+    const appointmentData: any = {
       name: `Appointment for ${booking.service}`,
       service: booking.service,
       date: `${booking.date}T${booking.time}`,
       duration: booking.duration || 60,
       price: booking.price || '$0',
-      notes: booking.notes || '',
-      status: status
+      notes: booking.notes || ''
     };
+    
+    // Only add status if we found a valid one
+    if (statusValue && statusFieldName) {
+      appointmentData.status = statusValue;
+    }
     
     // Add customer info to appointment if fields exist
     const appointmentWithCustomer = {
@@ -193,6 +223,11 @@ async function createAppointmentDynamic(notion: Client, appointmentsDbId: string
     };
     
     const properties = mapBookingToSchema(schema, appointmentWithCustomer);
+    
+    // If we have a status value but it wasn't mapped properly, add it manually
+    if (statusValue && statusFieldName && !properties[statusFieldName]) {
+      properties[statusFieldName] = buildNotionProperty(statusValue, 'status');
+    }
     
     const appointment = await notion.pages.create({
       parent: { database_id: appointmentsDbId },
