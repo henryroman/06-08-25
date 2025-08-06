@@ -39,23 +39,23 @@ export
 
 # Check required environment variables
 required_vars=("NOTION_TOKEN" "NOTION_CUSTOMERS_DB_ID" "NOTION_APPOINTMENTS_DB_ID")
-for var in ""; do
-    if [ -z "" ]; then
-        print_error "Required environment variable  is not set"
+for var in "${required_vars[@]}"; do
+    if [ -z "${!var}" ]; then
+        print_error "Required environment variable $var is not set"
         exit 1
     fi
 done
 
 print_status "Installing dependencies..."
 npm install
-if [ False -ne 0 ]; then
+if [ $? -ne 0 ]; then
     print_error "Failed to install dependencies"
     exit 1
 fi
 
 print_status "Building project with Google Places integration..."
 npm run build
-if [ False -ne 0 ]; then
+if [ $? -ne 0 ]; then
     print_error "Build failed"
     exit 1
 fi
@@ -90,7 +90,7 @@ pm2 delete demo-heavenly-nails 2>/dev/null || true
 
 # Start new process
 pm2 start ecosystem.config.js
-if [ False -ne 0 ]; then
+if [ $? -ne 0 ]; then
     print_error "Failed to start PM2 process"
     exit 1
 fi
@@ -151,14 +151,14 @@ sudo ln -sf /etc/nginx/sites-available/demo-heavenly-nails.conf /etc/nginx/sites
 
 print_status "Testing Nginx configuration..."
 sudo nginx -t
-if [ False -ne 0 ]; then
+if [ $? -ne 0 ]; then
     print_error "Nginx configuration test failed"
     exit 1
 fi
 
 print_status "Reloading Nginx..."
 sudo systemctl reload nginx
-if [ False -ne 0 ]; then
+if [ $? -ne 0 ]; then
     print_error "Failed to reload Nginx"
     exit 1
 fi
@@ -167,7 +167,7 @@ fi
 print_status "Checking application status..."
 sleep 5
 curl -f http://localhost:3000 > /dev/null
-if [ False -ne 0 ]; then
+if [ $? -ne 0 ]; then
     print_warning "Application may not be responding on port 3000"
     print_status "PM2 status:"
     pm2 status

@@ -12,6 +12,11 @@ export default defineConfig({
   integrations: [tailwind()],
   server: {
     port: 3000,
-    host: true
+    host: true,
+    allowedHosts: [
+      'preview-chat-9e45e026-9c69-4227-8b05-1cb5fbc6c71d.space.z.ai',
+      'localhost',
+      '127.0.0.1'
+    ]
   }
 });
