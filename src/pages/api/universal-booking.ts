@@ -157,23 +157,6 @@ async function createAppointmentDynamic(notion: Client, appointmentsDbId: string
       throw new Error('Could not fetch appointment database schema');
     }
     
-    // Get available status options if status field exists
-    let availableStatuses: string[] = [];
-    if (schema['Status'] || schema['status']) {
-      try {
-        const db = await notion.databases.retrieve({ database_id: appointmentsDbId });
-        const statusField = (db.properties as any)['Status'] || (db.properties as any)['status'];
-        if (statusField && statusField.status && statusField.status.options) {
-          availableStatuses = statusField.status.options.map((opt: any) => opt.name);
-        }
-      } catch (error) {
-        console.log('Could not fetch status options, using default');
-      }
-    }
-    
-    // Use first available status or default to a common one
-    const status = availableStatuses.length > 0 ? availableStatuses[0] : 'Not Started';
-    
     const appointmentData = {
       name: `Appointment for ${booking.service}`,
       service: booking.service,
@@ -181,7 +164,7 @@ async function createAppointmentDynamic(notion: Client, appointmentsDbId: string
       duration: booking.duration || 60,
       price: booking.price || '$0',
       notes: booking.notes || '',
-      status: status
+      status: 'pending'
     };
     
     // Add customer info to appointment if fields exist

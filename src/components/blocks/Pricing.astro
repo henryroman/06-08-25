@@ -61,13 +61,17 @@ const { layout } = siteConfig;
     if (!servicesGrid) return;
 
     try {
+      console.log('Loading services from API...');
       const response = await fetch('/api/services');
       const data = await response.json();
+      console.log('Services API response:', data);
       
       let services = [];
-      if (data.success && data.services) {
+      if (data.success && data.services && Array.isArray(data.services)) {
         services = data.services;
+        console.log('Services loaded from API:', services.length);
       } else {
+        console.log('API failed, using fallback services');
         // Fallback to config services
         services = [
           { name: "Manicure", duration: 45, price: "$45", description: "Classic manicure with nail polish" },
@@ -79,9 +83,11 @@ const { layout } = siteConfig;
         ];
       }
 
+      console.log('Rendering services:', services);
+
       // Render services
       servicesGrid.innerHTML = services.map((service, index) => `
-        <div class="${siteConfig.components.cards.featured} group hover:transform hover:scale-105 transition-all duration-300 animate-slideUp" 
+        <div class="bg-gradient-to-br from-primary-50 to-secondary-50 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 p-8 border border-primary-100 group hover:transform hover:scale-105 animate-slideUp" 
              style="animation-delay: ${index * 0.1}s">
           <div class="text-center">
             <!-- Service Icon -->
@@ -115,7 +121,7 @@ const { layout } = siteConfig;
             <!-- Book Button -->
             <button
               onclick="window.openBookingModal && window.openBookingModal()"
-              class="${siteConfig.components.buttons.primary} w-full group-hover:shadow-lg transition-all duration-300"
+              class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl w-full group-hover:shadow-lg transition-all duration-300"
             >
               <i class="fas fa-calendar-check mr-2"></i>
               Book Now
@@ -124,18 +130,58 @@ const { layout } = siteConfig;
         </div>
       `).join('');
 
+      console.log('Services rendered successfully');
+
     } catch (error) {
       console.error('Error loading services:', error);
-      // Show fallback services
-      servicesGrid.innerHTML = `
-        <div class="col-span-full text-center py-8">
-          <p class="text-gray-600 mb-4">Unable to load services. Please try again later.</p>
-          <button onclick="window.location.reload()" class="${siteConfig.components.buttons.primary}">
-            <i class="fas fa-refresh mr-2"></i>
-            Reload Page
-          </button>
+      // Show fallback services directly instead of error message
+      servicesGrid.innerHTML = [
+        { name: "Manicure", duration: 45, price: "$45", description: "Classic manicure with nail polish" },
+        { name: "Pedicure", duration: 60, price: "$55", description: "Relaxing pedicure with foot massage" },
+        { name: "Facial Treatment", duration: 90, price: "$85", description: "Deep cleansing facial treatment" }
+      ].map((service, index) => `
+        <div class="bg-gradient-to-br from-primary-50 to-secondary-50 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 p-8 border border-primary-100 group hover:transform hover:scale-105 animate-slideUp" 
+             style="animation-delay: ${index * 0.1}s">
+          <div class="text-center">
+            <!-- Service Icon -->
+            <div class="w-20 h-20 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:shadow-lg transition-all duration-300">
+              <i class="fas fa-spa text-3xl text-primary-600"></i>
+            </div>
+            
+            <!-- Service Name -->
+            <h3 class="text-2xl font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors">
+              ${service.name}
+            </h3>
+            
+            <!-- Service Description -->
+            <p class="text-gray-600 mb-6 leading-relaxed">
+              ${service.description || 'Professional beauty service'}
+            </p>
+            
+            <!-- Duration -->
+            <div class="flex items-center justify-center mb-4">
+              <i class="fas fa-clock text-primary-600 mr-2"></i>
+              <span class="text-gray-700 font-medium">${service.duration} minutes</span>
+            </div>
+            
+            <!-- Price -->
+            <div class="mb-6">
+              <span class="text-4xl font-bold text-primary-600">
+                ${service.price}
+              </span>
+            </div>
+            
+            <!-- Book Button -->
+            <button
+              onclick="window.openBookingModal && window.openBookingModal()"
+              class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl w-full group-hover:shadow-lg transition-all duration-300"
+            >
+              <i class="fas fa-calendar-check mr-2"></i>
+              Book Now
+            </button>
+          </div>
         </div>
-      `;
+      `).join('');
     }
   }
 
