@@ -28,10 +28,53 @@ export interface AppointmentData {
   Notes?: string;
 }
 
+export interface ServiceType {
+  name: string;
+  duration: number;
+  price: string;
+  description?: string;
+}
+
+/**
+ * Get service types from Notion database or fallback to config
+ */
+export async function getServiceTypes(): Promise<ServiceType[]> {
+  try {
+    // If Notion is configured, try to fetch from database
+    if (process.env.NOTION_APPOINTMENTS_DB_ID) {
+      const dbInfo = await notion.databases.retrieve({
+        database_id: process.env.NOTION_APPOINTMENTS_DB_ID!,
+      });
+
+      // Look for service type property
+      const serviceTypeProp = dbInfo.properties['Service Type'];
+      if (serviceTypeProp && (serviceTypeProp as any).multi_select?.options) {
+        const options = (serviceTypeProp as any).multi_select.options;
+        return options.map((option: any) => ({
+          name: option.name,
+          duration: 60, // Default duration
+          price: "$50", // Default price
+          description: option.description || ""
+        }));
+      }
+    }
+    
+    // Fallback to config
+    return siteConfig.appointments.types;
+  } catch (error) {
+    console.log('Error fetching service types from Notion, using config:', error);
+    return siteConfig.appointments.types;
+  }
+}
+
 /**
  * Create a new Customer in Notion Customers DB
  */
 export async function createCustomer(data: CustomerData) {
+  if (!process.env.NOTION_CUSTOMERS_DB_ID) {
+    throw new Error('Notion Customers DB ID not configured');
+  }
+
   return notion.pages.create({
     parent: { database_id: process.env.NOTION_CUSTOMERS_DB_ID! },
     properties: buildNotionProperties(customersSchema, data),
@@ -43,6 +86,10 @@ export async function createCustomer(data: CustomerData) {
  * Validates the Status against actual DB options before sending.
  */
 export async function createAppointment(data: AppointmentData) {
+  if (!process.env.NOTION_APPOINTMENTS_DB_ID) {
+    throw new Error('Notion Appointments DB ID not configured');
+  }
+
   // 1) Retrieve DB schema from Notion so we can see allowed Status values
   const dbInfo = await notion.databases.retrieve({
     database_id: process.env.NOTION_APPOINTMENTS_DB_ID!,
@@ -74,6 +121,11 @@ export async function createAppointment(data: AppointmentData) {
  */
 export async function checkAvailability(dateTime: string, duration: number): Promise<boolean> {
   try {
+    if (!process.env.NOTION_APPOINTMENTS_DB_ID) {
+      // If Notion is not configured, assume availability
+      return true;
+    }
+
     const startTime = new Date(dateTime);
     const endTime = new Date(startTime.getTime() + duration * 60000);
 
@@ -93,6 +145,12 @@ export async function checkAvailability(dateTime: string, duration: number): Pro
               before: endTime.toISOString(),
             },
           },
+          {
+            property: 'Status',
+            status: {
+              does_not_equal: 'Cancelled'
+            }
+          }
         ],
       },
     });
@@ -107,7 +165,7 @@ export async function checkAvailability(dateTime: string, duration: number): Pro
 /**
  * Get available slots for a given date
  */
-export async function getAvailableSlots(date: string) {
+export async function getAvailableSlots(date: string, serviceDuration: number = 60) {
   try {
     const { businessHours, bufferTime } = siteConfig.appointments;
     const dayOfWeek = new Date(date).getDay();
@@ -124,9 +182,11 @@ export async function getAvailableSlots(date: string) {
     const endTime = new Date(`${date}T${hours.close}:00`);
 
     let currentTime = new Date(startTime);
+    const slotInterval = Math.max(serviceDuration, bufferTime || 30);
+    
     while (currentTime < endTime) {
       const timeString = currentTime.toISOString();
-      const isAvailable = await checkAvailability(timeString, bufferTime);
+      const isAvailable = await checkAvailability(timeString, serviceDuration);
 
       if (isAvailable) {
         slots.push({
@@ -140,12 +200,60 @@ export async function getAvailableSlots(date: string) {
         });
       }
 
-      currentTime.setMinutes(currentTime.getMinutes() + 30);
+      currentTime.setMinutes(currentTime.getMinutes() + slotInterval);
     }
 
     return slots;
   } catch (error) {
     console.log('Error getting available slots:', error);
+    return [];
+  }
+}
+
+/**
+ * Get existing appointments for a date range
+ */
+export async function getAppointments(startDate: string, endDate: string) {
+  try {
+    if (!process.env.NOTION_APPOINTMENTS_DB_ID) {
+      return [];
+    }
+
+    const response = await notion.databases.query({
+      database_id: process.env.NOTION_APPOINTMENTS_DB_ID!,
+      filter: {
+        and: [
+          {
+            property: 'Date',
+            date: {
+              on_or_after: startDate,
+            },
+          },
+          {
+            property: 'Date',
+            date: {
+              before: endDate,
+            },
+          },
+          {
+            property: 'Status',
+            status: {
+              does_not_equal: 'Cancelled'
+            }
+          }
+        ],
+      },
+      sorts: [
+        {
+          property: 'Date',
+          direction: 'ascending',
+        },
+      ],
+    });
+
+    return response.results;
+  } catch (error) {
+    console.log('Error getting appointments:', error);
     return [];
   }
 }
