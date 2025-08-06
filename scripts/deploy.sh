@@ -35,7 +35,7 @@ if [ ! -f .env ]; then
 fi
 
 # Load environment variables
-export 
+export
 
 # Check required environment variables
 required_vars=("NOTION_TOKEN" "NOTION_CUSTOMERS_DB_ID" "NOTION_APPOINTMENTS_DB_ID")
@@ -104,21 +104,21 @@ sudo tee /etc/nginx/sites-available/demo-heavenly-nails.conf > /dev/null << 'EOF
 server {
     listen 80;
     server_name demo-heavenly-nails.yourdomain.com;
-    
+
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-XSS-Protection "1; mode=block" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header Referrer-Policy "no-referrer-when-downgrade" always;
     add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
-    
+
     # Gzip compression
     gzip on;
     gzip_vary on;
     gzip_min_length 1024;
     gzip_proxied expired no-cache no-store private must-revalidate;
     gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss;
-    
+
     location / {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
@@ -129,13 +129,13 @@ server {
         proxy_set_header X-Forwarded-For ;
         proxy_set_header X-Forwarded-Proto ;
         proxy_cache_bypass ;
-        
+
         # Timeout settings
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
     }
-    
+
     # Static files caching
     location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {
         proxy_pass http://localhost:3000;

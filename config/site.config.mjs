@@ -11,11 +11,29 @@
 
   // Theme & Branding
   theme: {
-    primary: "#7FFFD4",      // Pink for beauty salon
-    secondary: "#673AB7",    // Purple accent
-    accent: "#FF6F00",       // Orange for CTAs
-    background: "#FFFFFF",
-    text: "#673AB7",
+    primary: {
+      50: '#fdf2f8',
+      100: '#fce7f3',
+      200: '#fbcfe8',
+      300: '#f9a8d4',
+      400: '#f472b6',
+      500: '#ec4899',
+      600: '#db2777',
+      700: '#be185d',
+      800: '#9d174d',
+      900: '#831843'
+    },
+
+    fonts: {
+      heading: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      body: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    },
+    borderRadius: {
+      sm: '0.375rem',
+      md: '0.5rem',
+      lg: '0.75rem',
+      xl: '1rem'
+    }
   },
 
   // Content Arrays (easily replaceable)
