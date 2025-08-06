@@ -1,0 +1,23 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Hero from '../components/blocks/Hero.astro';
+import BusinessInfo from '../components/blocks/Business-Info.astro';
+import PhotoGallery from '../components/blocks/Photo-Gallery.astro';
+import GoogleReviews from '../components/blocks/Google-Reviews.astro';
+import Features from '../components/blocks/Features.astro';
+import Pricing from '../components/blocks/Pricing.astro';
+import Contact from '../components/blocks/Contact.astro';
+import BookingModal from '../components/blocks/BookingModal.astro';
+import { siteConfig } from '../../config/site.config.mjs';
+const { business: cfgBusiness } = siteConfig;
+---
+<Layout title={`${cfgBusiness.name} – ${cfgBusiness.tagline}`} description={cfgBusiness.description}>
+  <Hero />
+  <BusinessInfo />
+  <PhotoGallery />
+  <GoogleReviews />
+  <Features />
+  <Pricing />
+  <Contact />
+  <BookingModal />
+</Layout>

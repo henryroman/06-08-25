@@ -1,0 +1,27 @@
+---
+import Button from '../atomic/Button.astro';
+import { siteConfig } from '../../../config/site.config.mjs';
+
+const { hero } = siteConfig.content;
+---
+
+<section class="hero-v1 bg-gradient-to-br from-pink-50 via-white to-purple-50 py-20">
+  <div class="container mx-auto px-4">
+    <div class="text-center max-w-4xl mx-auto">
+      <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+        {hero.headline}
+      </h1>
+      <p class="text-xl md:text-2xl text-gray-600 mb-8 leading-relaxed">
+        {hero.subheadline}
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <Button variant="primary" size="lg" onclick="openBookingModal()">
+          {hero.cta}
+        </Button>
+        <Button variant="outline" size="lg">
+          Learn More
+        </Button>
+      </div>
+    </div>
+  </div>
+</section>

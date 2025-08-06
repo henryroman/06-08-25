@@ -1,0 +1,26 @@
+---
+import { siteConfig } from "../../../config/site.config.mjs";
+const { business } = siteConfig;
+---
+
+<section class="py-20 bg-gradient-to-br from-pink-100 via-purple-50 to-pink-50">
+  <div class="container mx-auto px-4">
+    <div class="text-center max-w-2xl mx-auto">
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">
+        {business.tagline}
+      </h1>
+      <p class="text-lg text-gray-600 mb-8">{business.description}</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <button
+          class="bg-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-pink-700 transition-colors"
+          onclick="window.openBookingModal && window.openBookingModal()"
+        >
+          Book Appointment
+        </button>
+        <a href="#contact" class="border-2 border-pink-600 text-pink-600 px-6 py-3 rounded-lg font-semibold hover:bg-pink-50 transition-colors flex items-center justify-center">
+          Learn More
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

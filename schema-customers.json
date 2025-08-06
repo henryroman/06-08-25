@@ -1,0 +1,13 @@
+{
+  "Promotion Messages": "checkbox",
+  "Phone Number": "phone_number",
+  "3 Weeks Later Message": "checkbox",
+  "1h Before Message": "checkbox",
+  "Communication History": "rich_text",
+  "Customer Type": "select",
+  "Next Action Date": "date",
+  "1h After Message": "checkbox",
+  "Appointment Date": "date",
+  "Email": "email",
+  "Customer Name": "title"
+}

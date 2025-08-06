@@ -1,0 +1,10 @@
+{
+  "Status": "status",
+  "Service Type": "select",
+  "Phone Number": "phone_number",
+  "Duration": "select",
+  "Date": "date",
+  "Client Name": "rich_text",
+  "Notes": "rich_text",
+  "Appointment": "title"
+}

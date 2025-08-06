@@ -1,0 +1,13 @@
+---
+import { siteConfig } from '../../../config/site.config.mjs';
+const { social } = siteConfig;
+---
+{social.length > 0 && (
+  <div class="social-links flex gap-4 mt-4">
+    {social.map((link) => (
+      <a href={link.url} target="_blank" rel="noopener" aria-label={link.name} class="hover:opacity-80">
+        <i class={`fab ${link.icon} text-2xl`}></i>
+      </a>
+    ))}
+  </div>
+)}

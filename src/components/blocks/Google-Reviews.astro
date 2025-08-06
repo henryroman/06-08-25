@@ -1,0 +1,30 @@
+---
+import business from '../../data/business.json';
+const reviews = (business.reviews || []) as Array<{
+  author: string;
+  rating: number;
+  text: string;
+  relativeTime: string;
+}>;
+---
+{reviews.length > 0 && (
+  <section class="google-reviews py-16 bg-white">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl font-bold mb-6">What Our Customers Say</h2>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {reviews.map((review) => (
+          <div class="p-6 border rounded-lg shadow-sm bg-gray-50">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-semibold">{review.author}</span>
+              <span class="text-yellow-500">
+                {'★'.repeat(review.rating) + '☆'.repeat(5 - review.rating)}
+              </span>
+            </div>
+            <p class="text-gray-700 text-sm mb-2">{review.text}</p>
+            <span class="text-xs text-gray-500">{review.relativeTime}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+)}

@@ -1,0 +1,32 @@
+---
+import Card from '../atomic/Card.astro';
+import Button from '../atomic/Button.astro';
+import { siteConfig } from '../../../config/site.config.mjs';
+const { services } = siteConfig.content;
+---
+
+<section class="pricing-section py-20 bg-gray-50">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+        Our Services
+      </h2>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+        Professional beauty treatments at competitive prices
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+      {services.map((service, index) => (
+        <Card variant={index === 1 ? 'featured' : 'default'} class="text-center">
+          <h3 class="text-xl font-bold text-gray-900 mb-2">{service.name}</h3>
+          <div class="text-3xl font-bold text-pink-600 mb-2">{service.price}</div>
+          <p class="text-gray-600 mb-4">{service.duration} minutes</p>
+          <Button variant="primary" class="w-full" onclick="openBookingModal()">
+            Book Now
+          </Button>
+        </Card>
+      ))}
+    </div>
+  </div>
+</section>

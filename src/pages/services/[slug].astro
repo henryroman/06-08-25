@@ -1,0 +1,26 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { siteConfig } from '../../../config/site.config.mjs';
+import business from '../../data/business.json';
+import { slugify } from '../../utils/string';
+
+const { slug } = Astro.params;
+const service = siteConfig.appointments.types.find(
+  (s) => slugify(s.name) === slug
+);
+
+if (!service) {
+  throw new Error(`Service not found: ${slug}`);
+}
+---
+<Layout title={`${service.name} – ${business.name}`}>
+  <section class="py-16">
+    <div class="container mx-auto px-4">
+      <h1 class="text-4xl font-bold mb-4">{service.name}</h1>
+      <p class="text-lg mb-2">Duration: {service.duration} minutes</p>
+      <p class="text-lg mb-4">Price: {service.price || 'Contact us'}</p>
+      <p class="mb-6">{business.description}</p>
+      <a href="/#booking" class="bg-pink-500 text-white px-4 py-2 rounded">Book Now</a>
+    </div>
+  </section>
+</Layout>

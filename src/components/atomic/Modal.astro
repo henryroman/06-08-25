@@ -1,0 +1,82 @@
+---
+export interface Props {
+  id: string;
+  size?: "sm" | "md" | "lg" | "xl";
+  closable?: boolean;
+}
+
+const {
+  id,
+  size = "md",
+  closable = true
+} = Astro.props;
+
+const sizeClasses = {
+  sm: "max-w-md",
+  md: "max-w-lg",
+  lg: "max-w-2xl",
+  xl: "max-w-4xl"
+};
+
+const modalClasses = "modal fixed inset-0 z-50 overflow-y-auto hidden";
+const contentClasses = `modal-content bg-white rounded-lg shadow-xl mx-auto mt-10 ${sizeClasses[size]} w-full max-h-screen overflow-y-auto`;
+
+declare global {
+  interface Window {
+    openModal: (modalId: string) => void;
+    closeModal: (modalId: string) => void;
+  }
+}
+---
+
+<div id={id} class={modalClasses}>
+  <div class="modal-backdrop fixed inset-0 bg-black bg-opacity-50" data-modal-close={closable ? id : undefined}></div>
+  <div class="relative p-4 min-h-screen flex items-center justify-center">
+    <div class={contentClasses}>
+      {(closable) && (
+        <button
+          type="button"
+          class="modal-close text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none absolute top-4 right-4"
+          data-modal-close={id}
+        >
+          &times;
+        </button>
+      )}
+      <div class="modal-body p-6">
+        <slot />
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll("[data-modal-close]").forEach(el => {
+      el.addEventListener("click", (e) => {
+        const target = e.target;
+        if (!(target instanceof HTMLElement)) return;
+        const modalId = target.getAttribute("data-modal-close");
+        if (modalId) {
+          const modal = document.getElementById(modalId);
+          if (modal) {
+            modal.classList.add("hidden");
+          }
+        }
+      });
+    });
+  });
+
+  (window).openModal = function(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.classList.remove("hidden");
+    }
+  };
+
+  (window).closeModal = function(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.classList.add("hidden");
+    }
+  };
+</script>

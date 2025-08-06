@@ -1,0 +1,68 @@
+---
+export interface Props {
+  title: string;
+  description?: string;
+}
+
+import business from '../data/business.json';
+import { siteConfig } from '../../config/site.config.mjs';
+const { social } = siteConfig as {
+  social: { name: string; url: string; icon: string }[];
+};
+
+const { title, description = '{business.name}' } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body class="flex flex-col min-h-screen">
+    <!-- Header / Nav -->
+    <header class="bg-white shadow">
+      <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+        <a href="/" class="text-2xl font-bold">{business.name}</a>
+        <ul class="hidden md:flex gap-6">
+          <li><a href="/" class="hover:underline">Home</a></li>
+          <li><a href="/services" class="hover:underline">Services</a></li>
+          <li><a href="/#contact" class="hover:underline">Contact</a></li>
+        </ul>
+        <button class="md:hidden" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+          ☰
+        </button>
+      </nav>
+      <div id="mobile-menu" class="hidden bg-white md:hidden">
+        <ul class="flex flex-col gap-4 p-4">
+          <li><a href="/" class="block">Home</a></li>
+          <li><a href="/services" class="block">Services</a></li>
+          <li><a href="/#contact" class="block">Contact</a></li>
+        </ul>
+      </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="flex-1">
+      <slot />
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 py-8">
+      <div class="container mx-auto px-4 text-center">
+        <p class="mb-4">&copy; {new Date().getFullYear()} {business.name}. All rights reserved.</p>
+        {social.length > 0 && (
+          <div class="flex justify-center gap-4">
+            {social.map((link) => (
+              <a href={link.url} target="_blank" rel="noopener" aria-label={link.name}>
+                <i class={`fab ${link.icon} text-2xl hover:opacity-80`}></i>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </footer>
+  </body>
+</html>

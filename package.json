@@ -1,0 +1,27 @@
+{
+    "version": "1.0.0",
+    "name": "website-builder-template",
+    "scripts": {
+        "build": "node scripts/build-places.js && astro build",
+        "build-places": "node scripts/build-places.js",
+        "build:no-places": "astro build",
+        "preview": "astro preview",
+        "start": "node dist/server/entry.mjs",
+        "dev": "astro dev",
+        "deploy": "bash scripts/deploy.sh"
+    },
+    "devDependencies": {
+        "@types/node": "^20.14.0"
+    },
+    "type": "module",
+    "dependencies": {
+        "@astrojs/node": "^8.3.2",
+        "@astrojs/tailwind": "^5.1.0",
+        "@notionhq/client": "^2.2.15",
+        "astro": "^4.15.4",
+        "dotenv": "^17.2.1",
+        "node-fetch": "^3.3.2",
+        "tailwindcss": "^3.4.3"
+    },
+    "private": true
+}

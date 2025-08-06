@@ -1,0 +1,17 @@
+---
+import business from '../../data/business.json';
+const photos = (business.photos || []) as string[];
+---
+{photos.length > 0 && (
+  <section class="photo-gallery py-16">
+    <div class="container mx-auto px-4 grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {photos.map((src) => (
+        <img
+          src={src}
+          alt="Business photo"
+          class="w-full h-48 object-cover rounded-lg shadow-md"
+        />
+      ))}
+    </div>
+  </section>
+)}

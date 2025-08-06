@@ -1,0 +1,169 @@
+---
+import Modal from "../atomic/Modal.astro";
+import Button from "../atomic/Button.astro";
+import Input from "../atomic/Input.astro";
+import { siteConfig } from "../../../config/site.config.mjs";
+const { appointments } = siteConfig;
+declare global {
+  interface Window {
+    openBookingModal: () => void;
+    closeBookingModal: () => void;
+  }
+}
+---
+
+<Modal id="booking" size="lg">
+  <form id="booking-form" class="space-y-6">
+    <div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Your Information</h3>
+      <div class="grid md:grid-cols-2 gap-4">
+        <Input type="text" name="name" placeholder="Full Name" required />
+        <Input type="email" name="email" placeholder="Email Address" required />
+      </div>
+      <div class="mt-4">
+        <Input type="tel" name="phone" placeholder="Phone Number" required />
+      </div>
+    </div>
+    <div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Select Service</h3>
+      <div class="grid gap-3">
+        {appointments.types.map((service) => (
+          <label class="service-option flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-pink-300 transition-colors">
+            <input type="radio" name="appointmentType" value={service.name} class="sr-only" required />
+            <div class="service-indicator w-5 h-5 border-2 border-gray-300 rounded-full mr-3 flex-shrink-0"></div>
+            <div class="flex-1">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="font-semibold text-gray-900">{service.name}</h4>
+                  <p class="text-sm text-gray-600">{service.duration} minutes</p>
+                </div>
+                <span class="text-lg font-bold text-pink-600">{service.price}</span>
+              </div>
+            </div>
+          </label>
+        ))}
+      </div>
+    </div>
+    <div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Choose Date & Time</h3>
+      <div class="grid md:grid-cols-2 gap-4 mb-4">
+        <Input type="date" name="date" id="appointment-date" required />
+        <select
+          name="time"
+          id="appointment-time"
+          required
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 disabled:bg-gray-100"
+        >
+          <option value="">Select time...</option>
+        </select>
+      </div>
+    </div>
+    <div class="flex gap-4 pt-4">
+      <Button type="button" variant="outline" class="flex-1" onclick="window.closeBookingModal && window.closeBookingModal()">
+        Cancel
+      </Button>
+      <Button type="submit" variant="primary" class="flex-1">
+        Book Appointment
+      </Button>
+    </div>
+  </form>
+</Modal>
+
+<script>
+  const form = document.getElementById("booking-form") as HTMLFormElement;
+  const dateInput = document.getElementById("appointment-date") as HTMLInputElement;
+  const timeSelect = document.getElementById("appointment-time") as HTMLSelectElement;
+
+  if (dateInput) {
+    const today = new Date().toISOString().split("T")[0];
+    dateInput.setAttribute("min", today);
+  }
+  document.querySelectorAll("input[name=appointmentType]").forEach(radio => {
+    radio.addEventListener("change", (e) => {
+      const target = e.target as HTMLInputElement;
+      document.querySelectorAll(".service-option").forEach(option => {
+        const indicator = option.querySelector(".service-indicator");
+        if (option.contains(target)) {
+          option.classList.add("border-pink-500", "bg-pink-50");
+          if (indicator) indicator.classList.add("border-pink-500", "bg-pink-500");
+        } else {
+          option.classList.remove("border-pink-500", "bg-pink-50");
+          if (indicator) indicator.classList.remove("border-pink-500", "bg-pink-500");
+        }
+      });
+    });
+  });
+
+  if (dateInput) {
+    dateInput.addEventListener("change", async (e) => {
+      const target = e.target as HTMLInputElement;
+      const selectedDate = target.value;
+      if (!selectedDate) return;
+      if (timeSelect) {
+        (timeSelect as any).disabled = true;
+        timeSelect.innerHTML = "<option value=\"\">Loading...</option>";
+        try {
+          const response = await fetch("/api/availability?date=" + selectedDate);
+          const data = await response.json();
+          const slots = data.availableSlots || [];
+          timeSelect.innerHTML = "<option value=\"\">Select time...</option>";
+          slots.forEach((slot: any) => {
+            const option = document.createElement("option");
+            option.value = slot.time;
+            option.textContent = slot.display;
+            timeSelect.appendChild(option);
+          });
+          (timeSelect as any).disabled = false;
+        } catch (error) {
+          timeSelect.innerHTML = "<option value=\"\">Error loading times</option>";
+        }
+      }
+    });
+  }
+
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const bookingData = Object.fromEntries(formData);
+
+      try {
+        const response = await fetch("/api/booking", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bookingData)
+        });
+
+        if (response.ok) {
+          alert("Appointment booked successfully!");
+          (form as any).reset();
+          if ((window as any).closeBookingModal) {
+            (window as any).closeBookingModal();
+          }
+        } else {
+          const error = await response.json();
+          alert("Error: " + error.message);
+        }
+      } catch (error) {
+        alert("Error booking appointment. Please try again.");
+      }
+    });
+  }
+
+  (window as any).openBookingModal = () => {
+    const modal = document.getElementById("booking");
+    if (modal) modal.classList.remove("hidden");
+  };
+
+  (window as any).closeBookingModal = () => {
+    const modal = document.getElementById("booking");
+    if (modal) modal.classList.add("hidden");
+  };
+</script>
+
+<style>
+  .service-indicator {
+    transition: all 0.2s ease;
+  }
+</style>

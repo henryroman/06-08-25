@@ -1,0 +1,25 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { siteConfig } from '../../../config/site.config.mjs';
+import { slugify } from '../../utils/string';
+const services = siteConfig.appointments.types;
+---
+<Layout title="Our Services">
+  <section class="py-16">
+    <div class="container mx-auto px-4">
+      <h1 class="text-4xl font-bold mb-8">Our Services</h1>
+      <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {services.map(service => {
+          const slug = slugify(service.name);
+          return (
+            <a href={`/services/${slug}`} class="block p-6 border rounded-lg hover:shadow-lg">
+              <h2 class="text-2xl font-semibold">{service.name}</h2>
+              <p>{service.duration} minutes</p>
+              <p>{service.price || 'Contact us'}</p>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+</Layout>
