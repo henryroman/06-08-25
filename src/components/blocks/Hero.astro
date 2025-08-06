@@ -1,26 +1,46 @@
 ---
 import { siteConfig } from "../../../config/site.config.mjs";
-const { business } = siteConfig;
+const { business, content, layout, theme } = siteConfig;
+const { hero } = content;
 ---
 
-<section class="py-20 bg-gradient-to-br from-pink-100 via-purple-50 to-pink-50">
-  <div class="container mx-auto px-4">
-    <div class="text-center max-w-2xl mx-auto">
-      <h1 class="text-4xl font-bold text-gray-900 mb-4">
-        {business.tagline}
+<section class={`${layout.sections.padding} ${hero.background} relative overflow-hidden`}>
+  <!-- Background decoration -->
+  <div class="absolute inset-0 bg-gradient-to-br from-primary-100/20 via-purple-50/20 to-secondary-100/20"></div>
+  <div class="absolute top-0 left-0 w-full h-full">
+    <div class="absolute top-10 left-10 w-72 h-72 bg-primary-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
+    <div class="absolute top-32 right-10 w-72 h-72 bg-secondary-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style="animation-delay: 2s"></div>
+    <div class="absolute -bottom-8 left-32 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style="animation-delay: 4s"></div>
+  </div>
+  
+  <div class="container mx-auto px-4 relative z-10">
+    <div class="text-center max-w-4xl mx-auto animate-slideUp">
+      <h1 class="text-4xl md:text-6xl font-bold ${hero.textColor} mb-6 leading-tight">
+        {hero.headline}
       </h1>
-      <p class="text-lg text-gray-600 mb-8">{business.description}</p>
-      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <p class="text-lg md:text-xl text-gray-700 mb-12 max-w-2xl mx-auto leading-relaxed">
+        {hero.subheadline}
+      </p>
+      <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
         <button
-          class="bg-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-pink-700 transition-colors"
+          class="${siteConfig.components.buttons.primary} text-lg px-8 py-4 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
           onclick="window.openBookingModal && window.openBookingModal()"
         >
-          Book Appointment
+          <i class="fas fa-calendar-check mr-2"></i>
+          {hero.cta}
         </button>
-        <a href="#contact" class="border-2 border-pink-600 text-pink-600 px-6 py-3 rounded-lg font-semibold hover:bg-pink-50 transition-colors flex items-center justify-center">
+        <a href="#contact" class="${siteConfig.components.buttons.outline} text-lg px-8 py-4 flex items-center justify-center hover:shadow-lg transition-all duration-300">
+          <i class="fas fa-info-circle mr-2"></i>
           Learn More
         </a>
       </div>
     </div>
+  </div>
+  
+  <!-- Scroll indicator -->
+  <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+    <a href="#features" class="text-primary-600 hover:text-primary-700 transition-colors">
+      <i class="fas fa-chevron-down text-2xl"></i>
+    </a>
   </div>
 </section>

@@ -1,9 +1,6 @@
 ---
-import Modal from "../atomic/Modal.astro";
-import Button from "../atomic/Button.astro";
-import Input from "../atomic/Input.astro";
 import { siteConfig } from "../../../config/site.config.mjs";
-const { appointments } = siteConfig;
+const { appointments, components, theme } = siteConfig;
 declare global {
   interface Window {
     openBookingModal: () => void;
@@ -12,118 +9,256 @@ declare global {
 }
 ---
 
-<Modal id="booking" size="lg">
-  <form id="booking-form" class="space-y-6">
-    <div>
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Your Information</h3>
-      <div class="grid md:grid-cols-2 gap-4">
-        <Input type="text" name="name" placeholder="Full Name" required />
-        <Input type="email" name="email" placeholder="Email Address" required />
+<!-- Modal Overlay -->
+<div id="booking" class="fixed inset-0 z-50 hidden">
+  <div class="${components.modals.overlay} fixed inset-0" onclick="window.closeBookingModal && window.closeBookingModal()"></div>
+  
+  <!-- Modal Content -->
+  <div class="fixed inset-0 flex items-center justify-center p-4">
+    <div class="${components.modals.content} animate-slideUp">
+      <!-- Modal Header -->
+      <div class="${components.modals.header}">
+        <div class="flex items-center justify-between">
+          <h3 class="text-2xl font-bold text-gray-900 flex items-center">
+            <i class="fas fa-calendar-check text-primary-600 mr-3"></i>
+            Book Your Appointment
+          </h3>
+          <button 
+            onclick="window.closeBookingModal && window.closeBookingModal()"
+            class="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
       </div>
-      <div class="mt-4">
-        <Input type="tel" name="phone" placeholder="Phone Number" required />
-      </div>
-    </div>
-    <div>
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Select Service</h3>
-      <div class="grid gap-3">
-        {appointments.types.map((service) => (
-          <label class="service-option flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-pink-300 transition-colors">
-            <input type="radio" name="appointmentType" value={service.name} class="sr-only" required />
-            <div class="service-indicator w-5 h-5 border-2 border-gray-300 rounded-full mr-3 flex-shrink-0"></div>
-            <div class="flex-1">
-              <div class="flex justify-between items-start">
-                <div>
-                  <h4 class="font-semibold text-gray-900">{service.name}</h4>
-                  <p class="text-sm text-gray-600">{service.duration} minutes</p>
-                </div>
-                <span class="text-lg font-bold text-pink-600">{service.price}</span>
+      
+      <!-- Modal Body -->
+      <div class="${components.modals.body}">
+        <form id="booking-form" class="space-y-8">
+          <!-- Personal Information -->
+          <div class="space-y-6">
+            <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+              <i class="fas fa-user text-primary-600 mr-2"></i>
+              Your Information
+            </h4>
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label for="booking-name" class="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="booking-name"
+                  name="name"
+                  placeholder="Enter your full name"
+                  required
+                  class="${components.inputs.default}"
+                />
+              </div>
+              <div>
+                <label for="booking-email" class="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  id="booking-email"
+                  name="email"
+                  placeholder="Enter your email address"
+                  required
+                  class="${components.inputs.default}"
+                />
               </div>
             </div>
-          </label>
-        ))}
+            <div>
+              <label for="booking-phone" class="block text-sm font-medium text-gray-700 mb-2">
+                Phone Number <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                id="booking-phone"
+                name="phone"
+                placeholder="Enter your phone number"
+                required
+                class="${components.inputs.default}"
+              />
+            </div>
+          </div>
+          
+          <!-- Service Selection -->
+          <div class="space-y-6">
+            <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+              <i class="fas fa-spa text-primary-600 mr-2"></i>
+              Select Service
+            </h4>
+            <div class="grid gap-4">
+              {appointments.types.map((service, index) => (
+                <label class="service-option group flex items-center p-6 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-primary-300 hover:bg-primary-50 transition-all duration-200">
+                  <input type="radio" name="appointmentType" value={service.name} class="sr-only" required />
+                  <div class="service-indicator w-6 h-6 border-2 border-gray-300 rounded-full mr-4 flex-shrink-0 transition-all duration-200"></div>
+                  <div class="flex-1">
+                    <div class="flex justify-between items-start">
+                      <div>
+                        <h5 class="font-semibold text-gray-900 text-lg group-hover:text-primary-600 transition-colors">
+                          {service.name}
+                        </h5>
+                        <p class="text-sm text-gray-600 mt-1">
+                          <i class="fas fa-clock mr-1"></i>
+                          {service.duration} minutes
+                        </p>
+                      </div>
+                      <span class="text-xl font-bold text-primary-600">
+                        {service.price}
+                      </span>
+                    </div>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+          
+          <!-- Date & Time Selection -->
+          <div class="space-y-6">
+            <h4 class="text-lg font-semibold text-gray-900 flex items-center">
+              <i class="fas fa-calendar-alt text-primary-600 mr-2"></i>
+              Choose Date & Time
+            </h4>
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label for="appointment-date" class="block text-sm font-medium text-gray-700 mb-2">
+                  Preferred Date <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  id="appointment-date"
+                  name="date"
+                  required
+                  class="${components.inputs.default}"
+                />
+              </div>
+              <div>
+                <label for="appointment-time" class="block text-sm font-medium text-gray-700 mb-2">
+                  Preferred Time <span class="text-red-500">*</span>
+                </label>
+                <select
+                  id="appointment-time"
+                  name="time"
+                  required
+                  class="${components.inputs.default} disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  disabled
+                >
+                  <option value="">Select a date first...</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      
+      <!-- Modal Footer -->
+      <div class="${components.modals.footer}">
+        <div class="flex gap-4">
+          <button
+            type="button"
+            onclick="window.closeBookingModal && window.closeBookingModal()"
+            class="${components.buttons.outline} flex-1"
+          >
+            <i class="fas fa-times mr-2"></i>
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="booking-form"
+            class="${components.buttons.primary} flex-1"
+          >
+            <i class="fas fa-check mr-2"></i>
+            Book Appointment
+          </button>
+        </div>
       </div>
     </div>
-    <div>
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Choose Date & Time</h3>
-      <div class="grid md:grid-cols-2 gap-4 mb-4">
-        <Input type="date" name="date" id="appointment-date" required />
-        <select
-          name="time"
-          id="appointment-time"
-          required
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 disabled:bg-gray-100"
-        >
-          <option value="">Select time...</option>
-        </select>
-      </div>
-    </div>
-    <div class="flex gap-4 pt-4">
-      <Button type="button" variant="outline" class="flex-1" onclick="window.closeBookingModal && window.closeBookingModal()">
-        Cancel
-      </Button>
-      <Button type="submit" variant="primary" class="flex-1">
-        Book Appointment
-      </Button>
-    </div>
-  </form>
-</Modal>
+  </div>
+</div>
 
 <script>
   const form = document.getElementById("booking-form") as HTMLFormElement;
   const dateInput = document.getElementById("appointment-date") as HTMLInputElement;
   const timeSelect = document.getElementById("appointment-time") as HTMLSelectElement;
 
+  // Set minimum date to today
   if (dateInput) {
     const today = new Date().toISOString().split("T")[0];
     dateInput.setAttribute("min", today);
   }
+
+  // Handle service selection
   document.querySelectorAll("input[name=appointmentType]").forEach(radio => {
     radio.addEventListener("change", (e) => {
       const target = e.target as HTMLInputElement;
       document.querySelectorAll(".service-option").forEach(option => {
         const indicator = option.querySelector(".service-indicator");
         if (option.contains(target)) {
-          option.classList.add("border-pink-500", "bg-pink-50");
-          if (indicator) indicator.classList.add("border-pink-500", "bg-pink-500");
+          option.classList.add("border-primary-500", "bg-primary-50");
+          if (indicator) {
+            indicator.classList.add("border-primary-500", "bg-primary-500");
+            indicator.innerHTML = '<div class="w-3 h-3 bg-white rounded-full m-0.5"></div>';
+          }
         } else {
-          option.classList.remove("border-pink-500", "bg-pink-50");
-          if (indicator) indicator.classList.remove("border-pink-500", "bg-pink-500");
+          option.classList.remove("border-primary-500", "bg-primary-50");
+          if (indicator) {
+            indicator.classList.remove("border-primary-500", "bg-primary-500");
+            indicator.innerHTML = '';
+          }
         }
       });
     });
   });
 
+  // Handle date selection and load available times
   if (dateInput) {
     dateInput.addEventListener("change", async (e) => {
       const target = e.target as HTMLInputElement;
       const selectedDate = target.value;
       if (!selectedDate) return;
+      
       if (timeSelect) {
-        (timeSelect as any).disabled = true;
-        timeSelect.innerHTML = "<option value=\"\">Loading...</option>";
+        timeSelect.disabled = true;
+        timeSelect.innerHTML = '<option value="">Loading available times...</option>';
+        
         try {
           const response = await fetch("/api/availability?date=" + selectedDate);
           const data = await response.json();
           const slots = data.availableSlots || [];
-          timeSelect.innerHTML = "<option value=\"\">Select time...</option>";
-          slots.forEach((slot: any) => {
-            const option = document.createElement("option");
-            option.value = slot.time;
-            option.textContent = slot.display;
-            timeSelect.appendChild(option);
-          });
-          (timeSelect as any).disabled = false;
+          
+          if (slots.length === 0) {
+            timeSelect.innerHTML = '<option value="">No available times</option>';
+          } else {
+            timeSelect.innerHTML = '<option value="">Select time...</option>';
+            slots.forEach((slot: any) => {
+              const option = document.createElement("option");
+              option.value = slot.time;
+              option.textContent = slot.display;
+              timeSelect.appendChild(option);
+            });
+          }
+          timeSelect.disabled = false;
         } catch (error) {
-          timeSelect.innerHTML = "<option value=\"\">Error loading times</option>";
+          timeSelect.innerHTML = '<option value="">Error loading times</option>';
         }
       }
     });
   }
 
+  // Handle form submission
   if (form) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+      const originalText = submitButton.innerHTML;
+      
+      // Show loading state
+      submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Booking...';
+      submitButton.disabled = true;
 
       const formData = new FormData(form);
       const bookingData = Object.fromEntries(formData);
@@ -136,34 +271,82 @@ declare global {
         });
 
         if (response.ok) {
-          alert("Appointment booked successfully!");
-          (form as any).reset();
-          if ((window as any).closeBookingModal) {
-            (window as any).closeBookingModal();
-          }
+          // Show success message
+          submitButton.innerHTML = '<i class="fas fa-check mr-2"></i>Booked Successfully!';
+          submitButton.classList.remove('bg-primary-600', 'hover:bg-primary-700');
+          submitButton.classList.add('bg-green-600');
+          
+          setTimeout(() => {
+            form.reset();
+            if ((window as any).closeBookingModal) {
+              (window as any).closeBookingModal();
+            }
+            // Reset button state
+            submitButton.innerHTML = originalText;
+            submitButton.classList.remove('bg-green-600');
+            submitButton.classList.add('bg-primary-600', 'hover:bg-primary-700');
+            submitButton.disabled = false;
+            
+            // Reset service selection visuals
+            document.querySelectorAll(".service-option").forEach(option => {
+              const indicator = option.querySelector(".service-indicator");
+              option.classList.remove("border-primary-500", "bg-primary-50");
+              if (indicator) {
+                indicator.classList.remove("border-primary-500", "bg-primary-500");
+                indicator.innerHTML = '';
+              }
+            });
+            
+            // Reset time select
+            if (timeSelect) {
+              timeSelect.innerHTML = '<option value="">Select a date first...</option>';
+              timeSelect.disabled = true;
+            }
+          }, 2000);
         } else {
           const error = await response.json();
           alert("Error: " + error.message);
+          submitButton.innerHTML = originalText;
+          submitButton.disabled = false;
         }
       } catch (error) {
         alert("Error booking appointment. Please try again.");
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
       }
     });
   }
 
+  // Global modal functions
   (window as any).openBookingModal = () => {
     const modal = document.getElementById("booking");
-    if (modal) modal.classList.remove("hidden");
+    if (modal) {
+      modal.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    }
   };
 
   (window as any).closeBookingModal = () => {
     const modal = document.getElementById("booking");
-    if (modal) modal.classList.add("hidden");
+    if (modal) {
+      modal.classList.add("hidden");
+      document.body.style.overflow = "auto";
+    }
   };
+
+  // Close modal on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      (window as any).closeBookingModal();
+    }
+  });
 </script>
 
 <style>
   .service-indicator {
     transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 </style>

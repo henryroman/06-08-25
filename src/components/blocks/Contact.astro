@@ -1,53 +1,161 @@
 ---
-import Button from '../atomic/Button.astro';
-import Input from '../atomic/Input.astro';
+import { siteConfig } from '../../../config/site.config.mjs';
 import business from '../../data/business.json';
+const { layout, theme } = siteConfig;
 ---
-<section id="contact" class="contact-section py-20 bg-white">
+
+<section id="contact" class={`${layout.sections.padding} bg-gradient-to-br from-gray-50 to-white`}>
   <div class="container mx-auto px-4">
-    <div class="grid lg:grid-cols-2 gap-12">
-      <div>
-        <h2 class="text-3xl font-bold text-gray-900 mb-6">Get In Touch</h2>
-        <p class="text-lg text-gray-600 mb-8">
-          For questions or appointments, contact us below.
-        </p>
-        {business.address && (
-          <div class="flex items-center mb-4">
-            <span class="mr-2">🏠</span>
-            <p>{business.address}</p>
+    <div class="text-center mb-16 animate-slideUp">
+      <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+        Get In Touch
+      </h2>
+      <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+        Have questions or ready to book your appointment? We'd love to hear from you!
+      </p>
+    </div>
+    
+    <div class="grid lg:grid-cols-2 gap-12 items-start">
+      <!-- Contact Information -->
+      <div class="animate-slideUp" style="animation-delay: 0.1s">
+        <div class="${siteConfig.components.cards.featured} p-8">
+          <h3 class="text-2xl font-semibold text-gray-900 mb-8 flex items-center">
+            <i class="fas fa-address-book text-primary-600 mr-3"></i>
+            Contact Information
+          </h3>
+          
+          <div class="space-y-6">
+            {business.address && (
+              <div class="flex items-start group">
+                <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0 group-hover:bg-primary-200 transition-colors">
+                  <i class="fas fa-map-marker-alt text-primary-600"></i>
+                </div>
+                <div>
+                  <h4 class="font-semibold text-gray-900 mb-1">Address</h4>
+                  <p class="text-gray-600 leading-relaxed">{business.address}</p>
+                </div>
+              </div>
+            )}
+            
+            {business.phone && (
+              <div class="flex items-start group">
+                <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0 group-hover:bg-primary-200 transition-colors">
+                  <i class="fas fa-phone text-primary-600"></i>
+                </div>
+                <div>
+                  <h4 class="font-semibold text-gray-900 mb-1">Phone</h4>
+                  <a href={`tel:${business.phone}`} class="text-gray-600 hover:text-primary-600 transition-colors">
+                    {business.phone}
+                  </a>
+                </div>
+              </div>
+            )}
+            
+            {business.email && (
+              <div class="flex items-start group">
+                <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0 group-hover:bg-primary-200 transition-colors">
+                  <i class="fas fa-envelope text-primary-600"></i>
+                </div>
+                <div>
+                  <h4 class="font-semibold text-gray-900 mb-1">Email</h4>
+                  <a href={`mailto:${business.email}`} class="text-gray-600 hover:text-primary-600 transition-colors">
+                    {business.email}
+                  </a>
+                </div>
+              </div>
+            )}
+            
+            {business.website && (
+              <div class="flex items-start group">
+                <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0 group-hover:bg-primary-200 transition-colors">
+                  <i class="fas fa-globe text-primary-600"></i>
+                </div>
+                <div>
+                  <h4 class="font-semibold text-gray-900 mb-1">Website</h4>
+                  <a href={business.website} target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-primary-600 transition-colors">
+                    Visit our website
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-        {business.phone && (
-          <div class="flex items-center mb-4">
-            <span class="mr-2">📞</span>
-            <p>{business.phone}</p>
-          </div>
-        )}
-        {business.email && (
-          <div class="flex items-center mb-4">
-            <span class="mr-2">📧</span>
-            <p>{business.email}</p>
-          </div>
-        )}
+        </div>
       </div>
-      <div>
-        <form id="contact-form" class="space-y-6">
-          <div class="grid md:grid-cols-2 gap-4">
-            <Input type="text" name="name" placeholder="Your Name" required />
-            <Input type="email" name="email" placeholder="Your Email" required />
-          </div>
-          <Input type="tel" name="phone" placeholder="Your Phone" />
-          <textarea
-            name="message"
-            rows="4"
-            placeholder="Your Message"
-            required
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          />
-          <Button type="submit" variant="primary" size="lg" class="w-full">
-            Send Message
-          </Button>
-        </form>
+      
+      <!-- Contact Form -->
+      <div class="animate-slideUp" style="animation-delay: 0.2s">
+        <div class="${siteConfig.components.cards.featured} p-8">
+          <h3 class="text-2xl font-semibold text-gray-900 mb-8 flex items-center">
+            <i class="fas fa-paper-plane text-primary-600 mr-3"></i>
+            Send us a Message
+          </h3>
+          
+          <form id="contact-form" class="space-y-6">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  placeholder="Enter your full name"
+                  required
+                  class="${siteConfig.components.inputs.default}"
+                />
+              </div>
+              <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  placeholder="Enter your email address"
+                  required
+                  class="${siteConfig.components.inputs.default}"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                placeholder="Enter your phone number"
+                class="${siteConfig.components.inputs.default}"
+              />
+            </div>
+            
+            <div>
+              <label for="message" class="block text-sm font-medium text-gray-700 mb-2">
+                Message <span class="text-red-500">*</span>
+              </label>
+              <textarea
+                id="message"
+                name="message"
+                rows="5"
+                placeholder="Tell us how we can help you..."
+                required
+                class="${siteConfig.components.inputs.default} resize-none"
+              ></textarea>
+            </div>
+            
+            <button
+              type="submit"
+              class="${siteConfig.components.buttons.primary} w-full text-lg py-4 flex items-center justify-center"
+            >
+              <i class="fas fa-paper-plane mr-2"></i>
+              Send Message
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   </div>
@@ -59,22 +167,45 @@ import business from '../../data/business.json';
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const submitButton = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const originalText = submitButton.innerHTML;
+    
+    // Show loading state
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending...';
+    submitButton.disabled = true;
+    
     const data = Object.fromEntries(new FormData(form));
+    
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
+      
       if (res.ok) {
-        alert('Message sent successfully!');
-        form.reset();
+        // Show success message
+        submitButton.innerHTML = '<i class="fas fa-check mr-2"></i>Message Sent!';
+        submitButton.classList.remove('bg-primary-600', 'hover:bg-primary-700');
+        submitButton.classList.add('bg-green-600');
+        
+        setTimeout(() => {
+          form.reset();
+          submitButton.innerHTML = originalText;
+          submitButton.classList.remove('bg-green-600');
+          submitButton.classList.add('bg-primary-600', 'hover:bg-primary-700');
+          submitButton.disabled = false;
+        }, 2000);
       } else {
         const err = await res.json();
         alert('Error: ' + err.message);
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
       }
-    } catch {
-      alert('Network error');
+    } catch (error) {
+      alert('Network error. Please try again later.');
+      submitButton.innerHTML = originalText;
+      submitButton.disabled = false;
     }
   });
 </script>
