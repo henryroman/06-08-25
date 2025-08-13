@@ -1,8 +1,12 @@
 ---
-// BookingModal.astro
-import { siteConfig } from '../../../config/site.config.mjs';
+// src/components/blocks/BookingModal.astro
+import { siteConfig } from '@/config/site.config.mjs';
 const { components } = siteConfig;
+const publishableKey = import.meta.env.PUBLIC_STRIPE_PUBLISHABLE_KEY;
 ---
+<script src="https://js.stripe.com/basil/stripe.js"></script>
+
+<!-- Booking Modal -->
 <div id="booking" class="fixed inset-0 z-50 hidden" aria-hidden="true">
   <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300" onclick="window.closeBookingModal && window.closeBookingModal()" role="button" aria-label="Close overlay"></div>
 
@@ -15,45 +19,49 @@ const { components } = siteConfig;
         </div>
       </header>
 
-      <div class="px-6 py-6 sm:px-8 sm:py-8 max-h-[calc(90vh-160px)] overflow-y-auto">
+      <div class="px-6 py-6 sm:px-8 sm:py-8 max-h-[calc(90vh-200px)] overflow-y-auto">
         <form id="booking-form" class="space-y-6" novalidate>
+          <!-- Personal Information -->
           <div class="grid sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium mb-1">Full name</label>
-              <input id="booking-name" name="name" required class="w-full p-3 border rounded" type="text" placeholder="Jane Doe" />
+              <label for="booking-name" class="block text-sm font-medium mb-1">Full name</label>
+              <input id="booking-name" name="name" required class="w-full p-3 border rounded" type="text" placeholder="Jane Doe" autocomplete="name" />
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1">Phone</label>
-              <input id="booking-phone" name="phone" required class="w-full p-3 border rounded" type="tel" placeholder="(555) 555-5555" />
+              <label for="booking-phone" class="block text-sm font-medium mb-1">Phone</label>
+              <input id="booking-phone" name="phone" required class="w-full p-3 border rounded" type="tel" placeholder="(555) 555-5555" autocomplete="tel" />
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1">Email</label>
-              <input id="booking-email" name="email" required class="w-full p-3 border rounded" type="email" placeholder="you@example.com" />
+              <label for="booking-email" class="block text-sm font-medium mb-1">Email</label>
+              <input id="booking-email" name="email" required class="w-full p-3 border rounded" type="email" placeholder="you@example.com" autocomplete="email" />
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1">Notes (optional)</label>
+              <label for="booking-notes" class="block text-sm font-medium mb-1">Notes (optional)</label>
               <input id="booking-notes" name="notes" class="w-full p-3 border rounded" type="text" placeholder="Any details..." />
             </div>
           </div>
 
+          <!-- Services -->
           <div>
             <h4 class="font-medium mb-2">Choose a service</h4>
             <div id="services-container" class="grid gap-3"></div>
           </div>
 
+          <!-- Date & Time -->
           <div class="grid sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium mb-1">Date</label>
+              <label for="appointment-date" class="block text-sm font-medium mb-1">Date</label>
               <input id="appointment-date" name="date" type="date" class="w-full p-3 border rounded" required />
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1">Time</label>
+              <label for="appointment-time" class="block text-sm font-medium mb-1">Time</label>
               <select id="appointment-time" name="time" class="w-full p-3 border rounded" disabled required>
                 <option value="">Select a date first...</option>
               </select>
             </div>
           </div>
 
+          <!-- Payment Options -->
           <div>
             <h4 class="font-medium mb-2">Payment option</h4>
             <div class="flex items-center gap-4">
@@ -69,6 +77,7 @@ const { components } = siteConfig;
             <div id="price-display" class="mt-3 text-sm text-gray-700"></div>
           </div>
 
+          <!-- Hidden Fields -->
           <input type="hidden" id="booking-duration" name="duration" value="" />
           <input type="hidden" id="booking-price" name="price" value="" />
 
@@ -79,16 +88,18 @@ const { components } = siteConfig;
       <div class="border-t px-6 py-4 bg-gray-50">
         <div class="flex gap-3">
           <button type="button" onclick="window.closeBookingModal && window.closeBookingModal()" class="flex-1 py-2 border rounded">Cancel</button>
-          <button id="booking-submit" type="submit" form="booking-form" class="flex-1 py-2 rounded bg-primary-600 text-white">Book Appointment</button>
+          <button id="booking-submit" type="submit" form="booking-form" class="flex-1 py-2 rounded bg-primary-600 text-white">Continue</button>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<script>
+<script define:vars={{ publishableKey }}>
 (() => {
-  // Elements (no TypeScript assertions — checks before usage)
+  const STRIPE_PK = publishableKey;
+
+  // DOM Elements - using safe getElementById with proper checks
   const form = document.getElementById('booking-form');
   const dateInput = document.getElementById('appointment-date');
   const timeSelect = document.getElementById('appointment-time');
@@ -98,34 +109,40 @@ const { components } = siteConfig;
   const priceInput = document.getElementById('booking-price');
   const submitBtn = document.getElementById('booking-submit');
   const priceDisplay = document.getElementById('price-display');
+  const modalContent = document.getElementById('modal-content');
 
-  if (dateInput instanceof HTMLInputElement) {
+  // Set minimum date
+  if (dateInput && dateInput instanceof HTMLInputElement) {
     const today = new Date().toISOString().split('T')[0];
     dateInput.setAttribute('min', today);
   }
 
-  // Utility: read site config safely (avoid TS property warnings)
-  const siteCfg = (typeof window !== 'undefined' && window['__SITE_CONFIG__']) ? window['__SITE_CONFIG__'] : {};
-
-  // load services from /api/services, fallback to site config
+  // Load services
   async function loadServices() {
     try {
       const res = await fetch('/api/services');
-      if (!res.ok) throw new Error('no services endpoint');
       const json = await res.json();
-      let services = Array.isArray(json.services) ? json.services : (json?.services || []);
+      let services = Array.isArray(json.services) ? json.services : (json || []);
       if (!services.length) {
-        services = (siteCfg.appointments && siteCfg.appointments.types) || [];
+        // Fallback to default services
+        services = [
+          { name: 'Manicure', duration: 45, price: '$45' },
+          { name: 'Pedicure', duration: 60, price: '$55' },
+          { name: 'Facial Treatment', duration: 90, price: '$85' }
+        ];
       }
       renderServices(services);
     } catch (err) {
-      console.warn('loadServices error', err);
-      const fallback = (siteCfg.appointments && siteCfg.appointments.types) || [];
-      renderServices(fallback);
+      console.error('loadServices error', err);
+      renderServices([]);
     }
   }
 
-  function escapeHtml(s) { return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (m) {
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m];
+    });
+  }
 
   function renderServices(services) {
     if (!servicesContainer) return;
@@ -133,6 +150,7 @@ const { components } = siteConfig;
       servicesContainer.innerHTML = `<div class="py-6 text-center text-gray-600">No services available</div>`;
       return;
     }
+
     servicesContainer.innerHTML = services.map((svc, i) => {
       const price = svc.price ? `<div class="text-sm font-semibold">${escapeHtml(String(svc.price))}</div>` : '';
       return `
@@ -147,19 +165,28 @@ const { components } = siteConfig;
       `;
     }).join('');
 
-    // add change listeners after rendering radio inputs
-    Array.from(document.querySelectorAll('input[name="appointmentType"]')).forEach((el) => {
+    // Add event listeners to service options
+    Array.from(document.querySelectorAll('input[name="appointmentType"]')).forEach(el => {
       el.addEventListener('change', (ev) => {
         const target = ev.target;
         if (!(target instanceof HTMLInputElement)) return;
+
+        // Update visual selection
         document.querySelectorAll('.service-option').forEach(s => s.classList.remove('border-primary-500','bg-primary-50'));
         const root = target.closest('label');
         if (root) root.classList.add('border-primary-500','bg-primary-50');
 
-        if (durationInput instanceof HTMLInputElement) durationInput.value = target.getAttribute('data-duration') || '';
-        if (priceInput instanceof HTMLInputElement) priceInput.value = target.getAttribute('data-price') || '';
+        // Update hidden fields
+        if (durationInput instanceof HTMLInputElement) {
+          durationInput.value = target.getAttribute('data-duration') || '';
+        }
+        if (priceInput instanceof HTMLInputElement) {
+          priceInput.value = target.getAttribute('data-price') || '';
+        }
 
         updatePriceDisplay();
+
+        // Reset times when service changes
         if (timeSelect instanceof HTMLSelectElement) {
           timeSelect.innerHTML = '<option value="">Select a date first...</option>';
           timeSelect.disabled = true;
@@ -189,12 +216,16 @@ const { components } = siteConfig;
     const baseCents = getSelectedServicePriceCents();
     const payNowEl = document.querySelector('input[name="paymentMode"][value="pay_now"]');
     const payingNow = (payNowEl instanceof HTMLInputElement) && payNowEl.checked;
+
     if (!priceDisplay) return;
-    if (baseCents <= 0) { priceDisplay.innerHTML = 'Price not set'; return; }
-    const baseD = (baseCents/100).toFixed(2);
+    if (baseCents <= 0) {
+      priceDisplay.innerHTML = 'Price not set';
+      return;
+    }
+
+    const baseD = (baseCents / 100).toFixed(2);
     if (payingNow) {
-      const disc = 0.1;
-      const discounted = Math.round(baseCents * (1 - disc));
+      const discounted = Math.round(baseCents * 0.9);
       priceDisplay.innerHTML = `Pay now and save 10%: <strong>$${(discounted/100).toFixed(2)}</strong> <span class="text-sm text-gray-500"> (was $${baseD})</span>`;
       if (priceInput instanceof HTMLInputElement) priceInput.value = String(discounted);
     } else {
@@ -203,205 +234,181 @@ const { components } = siteConfig;
     }
   }
 
+  // Payment mode change listener
   document.addEventListener('change', (e) => {
     const t = e.target;
-    if (t instanceof HTMLInputElement) {
-      if (t.name === 'paymentMode' || t.name === 'appointmentType') updatePriceDisplay();
+    if (t && (t.name === 'paymentMode' || t.name === 'appointmentType')) {
+      updatePriceDisplay();
     }
   });
 
+  // Date change handler - fetch available times
   if (dateInput instanceof HTMLInputElement && timeSelect instanceof HTMLSelectElement) {
     dateInput.addEventListener('change', async () => {
       const selectedDate = dateInput.value;
       if (!selectedDate) return;
+
       timeSelect.disabled = true;
-      timeSelect.innerHTML = '<option>Loading available times...</option>';
+      timeSelect.innerHTML = '<option>Loading...</option>';
 
       const dur = (durationInput instanceof HTMLInputElement && durationInput.value) ? Number(durationInput.value) : 60;
+
       try {
         const res = await fetch(`/api/availability?date=${encodeURIComponent(selectedDate)}&duration=${encodeURIComponent(String(dur))}`);
         const json = await res.json();
-        const slots = Array.isArray(json.availableSlots) ? json.availableSlots : (Array.isArray(json) ? json : []);
+        const slots = Array.isArray(json.availableSlots) ? json.availableSlots : [];
+
         if (!slots.length) {
           timeSelect.innerHTML = '<option value="">No available times</option>';
-          timeSelect.disabled = true;
           return;
         }
+
         timeSelect.innerHTML = '<option value="">Select time...</option>';
         slots.forEach(slot => {
           const iso = slot.iso || slot.time || slot;
-          let display = slot.display || (new Date(iso).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'}));
-          let timeValue = '';
-          try {
-            const d = new Date(iso);
-            if (!isNaN(d.getTime())) {
-              const hh = String(d.getHours()).padStart(2,'0');
-              const mm = String(d.getMinutes()).padStart(2,'0');
-              const ss = String(d.getSeconds()).padStart(2,'0');
-              timeValue = `${hh}:${mm}:${ss}`;
-            } else {
-              timeValue = String(slot.time || slot).slice(0,8);
-            }
-          } catch (e) {
-            timeValue = String(slot.time || slot).slice(0,8);
-          }
+          const display = slot.display || (new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }));
+          const timeValue = new Date(iso).toTimeString().slice(0, 8);
+
           const opt = document.createElement('option');
           opt.value = timeValue;
-          opt.setAttribute('data-iso', String(iso));
           opt.textContent = display;
           timeSelect.appendChild(opt);
         });
         timeSelect.disabled = false;
       } catch (err) {
-        console.error('availability error', err);
         timeSelect.innerHTML = '<option value="">Error loading times</option>';
-        timeSelect.disabled = true;
       }
     });
   }
 
-  if (form) {
+  // Form submission
+  if (form instanceof HTMLFormElement) {
     form.addEventListener('submit', async (evt) => {
       evt.preventDefault();
       if (statusEl) statusEl.textContent = '';
+
       const fd = new FormData(form);
       const booking = Object.fromEntries(fd.entries());
 
       const required = ['name','email','phone','appointmentType','date','time'];
-      const missing = required.filter(k => !booking[k] || String(booking[k]).trim() === '');
-      if (missing.length) {
-        if (statusEl) { statusEl.style.color = 'crimson'; statusEl.textContent = `Please fill: ${missing.join(', ')}`; }
-        return;
-      }
-
-      if (!booking.duration && durationInput instanceof HTMLInputElement) booking.duration = durationInput.value || '';
-      if (!booking.price && priceInput instanceof HTMLInputElement) booking.price = priceInput.value || '';
-
-      try {
-        const tVal = String(booking.time);
-        if (tVal.includes('T') || tVal.includes('Z')) {
-          const p = new Date(tVal);
-          const hh = String(p.getHours()).padStart(2,'0');
-          const mm = String(p.getMinutes()).padStart(2,'0');
-          const ss = String(p.getSeconds()).padStart(2,'0');
-          booking.time = `${hh}:${mm}:${ss}`;
-        } else {
-          const parts = tVal.split(':');
-          if (parts.length === 2) booking.time = `${parts[0].padStart(2,'0')}:${parts[1].padStart(2,'0')}:00`;
-          else if (parts.length === 3) booking.time = `${parts[0].padStart(2,'0')}:${parts[1].padStart(2,'0')}:${parts[2].padStart(2,'0')}`;
+      if (required.some(k => !booking[k])) {
+        if (statusEl) {
+          statusEl.style.color = 'crimson';
+          statusEl.textContent = `Please fill: ${required.filter(k => !booking[k]).join(', ')}`;
         }
-      } catch (e) {
-        if (statusEl) { statusEl.style.color = 'crimson'; statusEl.textContent = 'Invalid time value'; }
         return;
       }
 
       if (submitBtn instanceof HTMLButtonElement) {
         submitBtn.disabled = true;
         submitBtn.dataset.orig = submitBtn.innerHTML;
-        submitBtn.innerHTML = 'Booking...';
+        submitBtn.innerHTML = 'Processing...';
       }
 
-      const paymentModeInput = document.querySelector('input[name="paymentMode"]:checked');
-      const paymentMode = (paymentModeInput instanceof HTMLInputElement) ? paymentModeInput.value : 'pay_later';
+      const paymentMode = (document.querySelector('input[name="paymentMode"]:checked')).value;
 
       try {
         if (paymentMode === 'pay_now') {
-          // Create checkout session
+          // Create checkout session and redirect
           const resp = await fetch('/api/create-checkout-session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              name: booking.name,
-              email: booking.email,
-              phone: booking.phone,
-              appointmentType: booking.appointmentType,
-              date: booking.date,
-              time: booking.time,
-              duration: Number(booking.duration || 60),
-              priceCents: Number(booking.price || 0),
-              currency: 'usd'
+              ...booking,
+              priceCents: Number(booking.price || 0)
             })
           });
           const json = await resp.json();
+
           if (resp.ok && json.url) {
-            // redirect to Stripe Checkout
             window.location.href = json.url;
             return;
           } else {
-            if (statusEl) { statusEl.style.color = 'crimson'; statusEl.textContent = json.message || 'Failed to create payment session'; }
-            if (submitBtn instanceof HTMLButtonElement) { submitBtn.disabled = false; submitBtn.innerHTML = submitBtn.dataset.orig || 'Book Appointment'; }
-            return;
+            throw new Error(json.message || 'Failed to create payment session');
           }
         } else {
-          // Pay later -> normal booking endpoint
-          const resp = await fetch('/api/booking', {
+          // Pay later
+          const res = await fetch('/api/booking', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...booking, paymentMode: 'pay_later' })
+            body: JSON.stringify({ ...booking, paid: false })
           });
-          const json = await resp.json();
-          if (resp.ok && json.success) {
-            if (statusEl) { statusEl.style.color = 'green'; statusEl.textContent = 'Booked successfully!'; }
-            setTimeout(() => {
-              if (form) form.reset();
-              if (typeof window.closeBookingModal === 'function') window.closeBookingModal();
-              if (submitBtn instanceof HTMLButtonElement) { submitBtn.innerHTML = submitBtn.dataset.orig || 'Book Appointment'; submitBtn.disabled = false; }
-              if (timeSelect instanceof HTMLSelectElement) { timeSelect.innerHTML = '<option value="">Select a date first...</option>'; timeSelect.disabled = true; }
-            }, 700);
-          } else {
-            if (statusEl) { statusEl.style.color = 'crimson'; statusEl.textContent = json.message || 'Failed to book appointment'; }
-            if (submitBtn instanceof HTMLButtonElement) { submitBtn.innerHTML = submitBtn.dataset.orig || 'Book Appointment'; submitBtn.disabled = false; }
+
+          if (!res.ok) throw new Error((await res.json()).message);
+
+          if (statusEl) {
+            statusEl.style.color = 'green';
+            statusEl.textContent = 'Booked successfully!';
           }
+
+          setTimeout(() => {
+            if (form instanceof HTMLFormElement) form.reset();
+            if (window.closeBookingModal) window.closeBookingModal();
+          }, 1500);
         }
       } catch (err) {
-        console.error('submit error', err);
-        if (statusEl) { statusEl.style.color = 'crimson'; statusEl.textContent = 'Network error while booking'; }
-        if (submitBtn instanceof HTMLButtonElement) { submitBtn.innerHTML = submitBtn.dataset.orig || 'Book Appointment'; submitBtn.disabled = false; }
+        const message = err instanceof Error ? err.message : 'An error occurred.';
+        if (statusEl) {
+          statusEl.style.color = 'crimson';
+          statusEl.textContent = message;
+        }
+      } finally {
+        if (submitBtn instanceof HTMLButtonElement) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = submitBtn.dataset.orig || 'Continue';
+        }
       }
     });
   }
 
-  // Expose open/close functions on window (no TS declarations)
-  window.openBookingModal = function () {
+  // Modal functions
+  window.openBookingModal = function() {
     const modal = document.getElementById('booking');
     if (!modal) return;
+
     modal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+
     setTimeout(() => {
-      const mc = document.getElementById('modal-content');
-      if (mc) {
-        mc.classList.remove('scale-95','opacity-0');
-        mc.classList.add('scale-100','opacity-100');
+      if (modalContent) {
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
       }
     }, 10);
+
     loadServices();
     updatePriceDisplay();
   };
 
-  window.closeBookingModal = function () {
+  window.closeBookingModal = function() {
     const modal = document.getElementById('booking');
     if (!modal) return;
-    const mc = document.getElementById('modal-content');
-    if (mc) {
-      mc.classList.remove('scale-100','opacity-100');
-      mc.classList.add('scale-95','opacity-0');
+
+    if (modalContent) {
+      modalContent.classList.remove('scale-100', 'opacity-100');
+      modalContent.classList.add('scale-95', 'opacity-0');
     }
+
     setTimeout(() => {
       modal.classList.add('hidden');
       document.body.style.overflow = 'auto';
     }, 250);
   };
 
+  // Escape key handler
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && typeof window.closeBookingModal === 'function') window.closeBookingModal();
+    if (e.key === 'Escape' && window.closeBookingModal) {
+      window.closeBookingModal();
+    }
   });
 
-  // If modal is visible on load, initialize services
-  const initialModal = document.getElementById('booking');
-  if (initialModal && !initialModal.classList.contains('hidden')) loadServices();
+  // Load services on initial load if modal is visible
+  if (!document.getElementById('booking')?.classList.contains('hidden')) {
+    loadServices();
+  }
 })();
 </script>
 
 <style>
-/* keep Tailwind classes in markup; any small extra CSS can go here */
+/* Additional styles if needed */
 </style>

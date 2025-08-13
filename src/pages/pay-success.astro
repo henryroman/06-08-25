@@ -1,0 +1,103 @@
+---
+const bookingId = Astro.url.searchParams.get('bookingId') || '';
+const sessionId = Astro.url.searchParams.get('session_id') || '';
+
+const pageTitle = 'Payment successful';
+const subtitle = bookingId
+  ? `Your booking is confirmed. Reference: ${bookingId}`
+  : 'Your payment was successful.';
+
+const showSessionHint = Boolean(sessionId);
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{pageTitle}</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+      :root { color-scheme: light dark; }
+      body { font-family: system-ui, sans-serif; margin: 0; }
+      .wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #f8fafc; }
+      .card { max-width: 680px; width: 100%; background: #fff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 28px; }
+      .title { font-size: 24px; font-weight: 700; margin: 0 0 6px; }
+      .subtitle { margin: 0 0 16px; color: #555; }
+      .note { font-size: 14px; color: #666; }
+      .success { display: inline-flex; align-items: center; gap: 10px; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; padding: 10px 14px; border-radius: 10px; margin: 14px 0 6px; }
+      .row { display: flex; gap: 12px; margin-top: 18px; }
+      .btn { padding: 10px 16px; border-radius: 10px; text-decoration: none; font-weight: 600; }
+      .btn-primary { background: #22c55e; color: #fff; }
+      .btn-outline { border: 1px solid #ccc; background: #fff; color: #000; }
+      .meta { margin-top: 18px; font-size: 14px; color: #555; }
+      .mono { font-family: monospace; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <main class="card">
+        <h1 class="title">Payment successful</h1>
+        <p class="subtitle">{subtitle}</p>
+
+        <div class="success">
+          ✅ <span>Thanks — the payment has been received.</span>
+        </div>
+
+        <div class="meta" id="session-meta" hidden>
+          <div>Stripe session: <span class="mono" id="session-id"></span></div>
+          <div>Status: <span class="mono" id="session-status">checking…</span></div>
+          <div>Customer: <span class="mono" id="customer-email">—</span></div>
+        </div>
+
+        <div class="row">
+          <a class="btn btn-primary" href="/">Back to home</a>
+          <a class="btn btn-outline" href="/#booking">Book another appointment</a>
+        </div>
+
+        {bookingId && (
+          <p class="note">Booking ref: <span class="mono">{bookingId}</span></p>
+        )}
+      </main>
+    </div>
+
+    {showSessionHint && (
+  <script>
+    (async () => {
+      try {
+        const q = new URLSearchParams(window.location.search);
+        const sid = q.get('session_id') || '';
+        if (!sid) return;
+
+        const url = new URL('/api/session-status', window.location.origin);
+        url.searchParams.set('session_id', sid);
+
+        const res = await fetch(url.toString(), { credentials: 'same-origin' });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        const box = document.getElementById('session-meta');
+        const sidEl = document.getElementById('session-id');
+        const statusEl = document.getElementById('session-status');
+        const emailEl = document.getElementById('customer-email');
+
+        // Narrow all elements before use
+        if (
+          !(box instanceof HTMLElement) ||
+          !(sidEl instanceof HTMLElement) ||
+          !(statusEl instanceof HTMLElement) ||
+          !(emailEl instanceof HTMLElement)
+        ) {
+          return;
+        }
+
+        box.hidden = false;
+        sidEl.textContent = sid;
+        statusEl.textContent = (data && data.status) ? String(data.status) : '—';
+        emailEl.textContent = (data && data.customer_email) ? String(data.customer_email) : '—';
+      } catch {
+        // no-op
+      }
+    })();
+  </script>
+)}
+  </body>
+</html>

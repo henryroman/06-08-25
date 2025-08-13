@@ -28,6 +28,7 @@ export async function createAppointment(data: Record<string, any>): Promise<Noti
   const schema = await getDatabaseSchema(notion, dbId);
   validateSchemaMapping(schema);
 
+  // Ensure Status is valid if status prop exists
   const dbInfo = await notion.databases.retrieve({ database_id: dbId });
   const statusProp = (dbInfo.properties as any)['Status'];
   if (statusProp && statusProp.status && Array.isArray(statusProp.status.options)) {
@@ -45,8 +46,24 @@ export async function updateAppointment(pageId: string, data: Record<string, any
   const dbId = process.env.NOTION_APPOINTMENTS_DB_ID;
   if (!dbId) throw new Error('NOTION_APPOINTMENTS_DB_ID not configured');
   if (!notion) throw new Error('Notion client not initialized');
+
+  // Fetch DB schema to build properties correctly
   const schema = await getDatabaseSchema(notion, dbId);
   validateSchemaMapping(schema);
+
+  // Ensure Status is valid if being updated
+  if (data.Status) {
+    const dbInfo = await notion.databases.retrieve({ database_id: dbId });
+    const statusProp = (dbInfo.properties as any)['Status'];
+    if (statusProp && statusProp.status && Array.isArray(statusProp.status.options)) {
+      const allowed = statusProp.status.options.map((o: any) => o.name);
+      if (!allowed.includes(data.Status)) {
+        console.warn(`Status '${data.Status}' not found in allowed values: ${allowed.join(', ')}`);
+        data.Status = allowed[0] ?? data.Status;
+      }
+    }
+  }
+
   const properties = buildNotionProperties(schema, data);
   return notion.pages.update({ page_id: pageId, properties });
 }
@@ -62,8 +79,13 @@ export async function getAppointment(pageId: string): Promise<any> {
   }
 }
 
-/* checkAvailability, getServiceTypes, getAppointments, getAvailableSlots same as before */
+/**
+ * Efficient availability check:
+ * - We query appointments for the day once, extract start/end times,
+ * - For the requested start & duration we check overlaps in-memory.
+ */
 export async function checkAvailability(startIso: string, duration: number): Promise<boolean> {
+  // If Notion client unset, consider available for simulation
   if (!notion) return true;
   const dbId = process.env.NOTION_APPOINTMENTS_DB_ID;
   if (!dbId) return true;
@@ -74,6 +96,7 @@ export async function checkAvailability(startIso: string, duration: number): Pro
 
     const end = new Date(start.getTime() + Math.max(1, duration) * 60000);
 
+    // Query for pages on that day: use start-of-day to end-of-day to minimize results
     const dayStart = new Date(start);
     dayStart.setHours(0,0,0,0);
     const dayEnd = new Date(dayStart);
@@ -101,9 +124,12 @@ export async function checkAvailability(startIso: string, duration: number): Pro
       } catch (e) { return { start: null, end: null }; }
     }).filter(a => a.start);
 
+    // If any appointment overlaps request window -> not available
     for (const ap of appointments) {
       const aStart = ap.start!;
+      // If the appointment has no end use duration guess; otherwise use its end
       const aEnd = ap.end ? ap.end : new Date(aStart.getTime() + Math.max(30, 60) * 60000);
+      // Overlap check
       if (aStart < end && aEnd > start) {
         return false;
       }
@@ -111,6 +137,7 @@ export async function checkAvailability(startIso: string, duration: number): Pro
     return true;
   } catch (err) {
     console.error('checkAvailability error', err);
+    // Conservative fallback: allow booking (or you may prefer deny, adjust as needed)
     return true;
   }
 }
@@ -131,6 +158,9 @@ export async function getServiceTypes(): Promise<{ name: string; duration: numbe
   return siteConfig.appointments.types || [];
 }
 
+/**
+ * Query appointments in date range - used by tools
+ */
 export async function getAppointments(startDateIso: string, endDateIso: string) {
   const dbId = process.env.NOTION_APPOINTMENTS_DB_ID;
   if (!dbId || !notion) return [];
@@ -154,6 +184,9 @@ export async function getAppointments(startDateIso: string, endDateIso: string) 
   }
 }
 
+/**
+ * Build available slots for a date using business hours and checkAvailability
+ */
 export async function getAvailableSlots(date: string, serviceDuration: number = 60) {
   try {
     const { businessHours = {}, bufferTime = 30 } = siteConfig.appointments || {};
@@ -173,7 +206,11 @@ export async function getAvailableSlots(date: string, serviceDuration: number = 
       const iso = cursor.toISOString();
       const avail = await checkAvailability(iso, serviceDuration);
       if (avail) {
-        slots.push({ time: iso.slice(11,19), iso, display: cursor.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) });
+        slots.push({
+          time: iso.slice(11,19),
+          iso,
+          display: cursor.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+        });
       }
       cursor.setMinutes(cursor.getMinutes() + interval);
     }

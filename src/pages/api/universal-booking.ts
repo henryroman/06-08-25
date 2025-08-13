@@ -123,14 +123,7 @@ async function createCustomerDynamic(notion: Client, customersDbId: string, book
       throw new Error('Could not fetch customer database schema');
     }
 
-    const customerData = {
-      name: booking.name,
-      email: booking.email,
-      phone: booking.phone,
-      notes: `Created from booking for ${booking.service} on ${booking.date}`
-    };
-
-    const properties = mapBookingToSchema(schema, customerData);
+    const properties = mapBookingToSchema(schema, booking);
 
     // Add customer type if the field exists
     if (schema['Customer Type']) {
@@ -157,25 +150,7 @@ async function createAppointmentDynamic(notion: Client, appointmentsDbId: string
       throw new Error('Could not fetch appointment database schema');
     }
 
-    const appointmentData = {
-      name: `Appointment for ${booking.service}`,
-      service: booking.service,
-      date: `${booking.date}T${booking.time}`,
-      duration: booking.duration || 60,
-      price: booking.price || '$0',
-      notes: booking.notes || '',
-      status: 'pending'
-    };
-
-    // Add customer info to appointment if fields exist
-    const appointmentWithCustomer = {
-      ...appointmentData,
-      name: booking.name,
-      phone: booking.phone,
-      email: booking.email
-    };
-
-    const properties = mapBookingToSchema(schema, appointmentWithCustomer);
+    const properties = mapBookingToSchema(schema, booking);
 
     const appointment = await notion.pages.create({
       parent: { database_id: appointmentsDbId },
@@ -256,7 +231,7 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response(
         JSON.stringify({
           success: false,
-          message: `Failed to create appointment: ${error.message}`
+          message: `Failed to create appointment: ${(error as Error).message}`
         }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );

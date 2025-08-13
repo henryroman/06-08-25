@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 import { siteConfig } from '../../../config/site.config.mjs';
 import { checkAvailability, createAppointment, createCustomer, updateAppointment } from '../../utils/notion';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2023-11-15' });
+const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY || '');
 
 function parsePriceToCentsFromCandidate(priceCandidate: any) {
   if (!priceCandidate) return 0;
@@ -21,33 +21,53 @@ function parsePriceToCentsFromCandidate(priceCandidate: any) {
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json().catch(() => null);
-    if (!body) return new Response(JSON.stringify({ success: false, message: 'Invalid JSON' }), { status: 400 });
+    if (!body) {
+      return new Response(JSON.stringify({ success: false, message: 'Invalid JSON' }), { status: 400 });
+    }
 
     const { name, email, phone, appointmentType, date, time, duration = 60 } = body;
-    // compute base price cents: prefer body.priceCents, otherwise lookup from siteConfig
+
+    // Compute base price cents: prefer body.priceCents, otherwise lookup from siteConfig
     let priceCents = Number(body.priceCents || 0);
     if (!priceCents) {
       const svc = (siteConfig.appointments?.types || []).find((t) => t.name === appointmentType);
       priceCents = parsePriceToCentsFromCandidate(svc?.price);
     }
-    // apply 10% discount for pay now
+
+    // Apply 10% discount for pay now
     const discounted = Math.round(priceCents * 0.9);
 
+    // Validate required fields
     if (!name || !email || !appointmentType || !date || !time) {
-      return new Response(JSON.stringify({ success: false, message: 'Missing required booking fields' }), { status: 400 });
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Missing required booking fields'
+      }), { status: 400 });
     }
 
+    // Build ISO for start time and check availability
     const isoStart = new Date(`${date}T${time}`).toISOString();
     const isAvailable = await checkAvailability(isoStart, Number(duration));
-    if (!isAvailable) return new Response(JSON.stringify({ success: false, message: 'Selected slot not available' }), { status: 409 });
+    if (!isAvailable) {
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Selected slot not available'
+      }), { status: 409 });
+    }
 
-    // create or find customer in Notion (best-effort)
+    // Create or find customer in Notion (best-effort)
     try {
-      await createCustomer({ 'Customer Name': name, Email: email, 'Phone Number': phone, 'Customer Type': 'New Client' });
+      await createCustomer({
+        'Customer Name': name,
+        Email: email,
+        'Phone Number': phone,
+        'Customer Type': 'New Client'
+      });
     } catch (err) {
       console.warn('createCustomer failed', err);
     }
 
+    // Create a pending appointment in Notion
     const appointmentInput = {
       Appointment: `Appointment – ${appointmentType}`,
       'Client Name': name,
@@ -65,8 +85,9 @@ export const POST: APIRoute = async ({ request }) => {
     const created = await createAppointment(appointmentInput);
     const notionPageId = created.id;
 
+    // Create Stripe checkout session
     const currency = (body.currency || 'usd').toLowerCase();
-    const amountToCharge = discounted;
+    const amountToCharge = discounted; // 10% discount applied
     const successUrl = (process.env.PAYMENT_SUCCESS_URL || 'http://localhost:3000/pay-success') + `?bookingId=${encodeURIComponent(notionPageId)}`;
     const cancelUrl = (process.env.PAYMENT_CANCEL_URL || 'http://localhost:3000/pay-cancel') + `?bookingId=${encodeURIComponent(notionPageId)}`;
 
@@ -77,20 +98,30 @@ export const POST: APIRoute = async ({ request }) => {
         {
           price_data: {
             currency,
-            product_data: { name: appointmentType, description: `Appointment on ${date} at ${time}` },
+            product_data: {
+              name: appointmentType,
+              description: `Appointment on ${date} at ${time} (10% off for paying online)`
+            },
             unit_amount: amountToCharge
           },
           quantity: 1
         }
       ],
-      metadata: { notionPageId, appointmentType, date, time },
-      // populate customer email so Stripe can send receipts if enabled
+      metadata: {
+        notionPageId,
+        appointmentType,
+        date,
+        time,
+        originalPrice: priceCents.toString(),
+        discountedPrice: amountToCharge.toString()
+      },
+      // Set customer email so Stripe can send receipts automatically
       customer_email: email,
       success_url: successUrl,
       cancel_url: cancelUrl
     });
 
-    // update notion appointment with session id and payment link
+    // Update Notion appointment with session ID and payment link
     try {
       await updateAppointment(notionPageId, {
         'Stripe Session': session.id,
@@ -101,9 +132,24 @@ export const POST: APIRoute = async ({ request }) => {
       console.warn('updateAppointment failed', err);
     }
 
-    return new Response(JSON.stringify({ success: true, url: session.url }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({
+      success: true,
+      url: session.url,
+      sessionId: session.id,
+      notionPageId
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
   } catch (err: any) {
     console.error('create-checkout-session error', err);
-    return new Response(JSON.stringify({ success: false, message: err?.message || 'Server error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({
+      success: false,
+      message: err?.message || 'Server error'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 };

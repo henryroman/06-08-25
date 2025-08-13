@@ -4,7 +4,10 @@ import Stripe from 'stripe';
 import { getAppointment, updateAppointment } from '../../utils/notion';
 import { siteConfig } from '../../../config/site.config.mjs';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2023-11-15' });
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2023-11-15' as any, // Add 'as any' here
+});
 
 function parsePriceStringToCents(priceStr: any) {
   if (!priceStr) return 0;

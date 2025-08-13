@@ -2,9 +2,13 @@
   "Status": "status",
   "Service Type": "select",
   "Phone Number": "phone_number",
+  "Status ": "status",
+  "Date 1": "date",
+  "Stripe Session": "rich_text",
   "Duration": "select",
   "Date": "date",
   "Client Name": "rich_text",
+  "Stripe Customer": "rich_text",
   "Notes": "rich_text",
   "Appointment": "title"
 }
