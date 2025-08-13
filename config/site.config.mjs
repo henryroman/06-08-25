@@ -170,7 +170,7 @@
         icon: "🎨"
       },
       {
-        title: "Luxury Spa Treatments", 
+        title: "Luxury Spa Treatments",
         description: "Relaxing treatments for ultimate rejuvenation",
         icon: "💆‍♀️"
       },
@@ -186,7 +186,7 @@
       }
     ],
     services: [
-      { name: "Manicure", duration: 45, price: "$45", description: "Classic manicure with nail polish" },
+      { name: "Handjob", duration: 45, price: "$45", description: "Classic manicure with nail polish" },
       { name: "Pedicure", duration: 60, price: "$55", description: "Relaxing pedicure with foot massage" },
       { name: "Facial Treatment", duration: 90, price: "$85", description: "Deep cleansing facial treatment" },
       { name: "Gel Nails", duration: 75, price: "$65", description: "Long-lasting gel nail application" },

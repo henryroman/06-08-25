@@ -1,338 +1,81 @@
+// src/pages/api/booking.ts
 import type { APIRoute } from 'astro';
-import { Client } from '@notionhq/client';
+import { siteConfig } from '../../../config/site.config.mjs';
+import { createCustomer, createAppointment, checkAvailability } from '../../utils/notion';
+import type { BookingRequest, BookingResponse } from '../../types/booking';
 
-// Dynamic schema detection and booking creation
-export interface BookingRequest {
-  name: string;
-  email: string;
-  phone: string;
-  service: string;
-  date: string;
-  time: string;
-  duration?: number;
-  price?: string;
-  notes?: string;
-}
+function validatePayload(body: unknown): BookingRequest {
+  if (!body || typeof body !== 'object') throw new Error('Invalid JSON body');
+  const payload = body as Record<string, any>;
+  const required = ['name', 'email', 'phone', 'appointmentType', 'date', 'time'];
+  const missing = required.filter(k => !payload[k] || String(payload[k]).trim() === '');
+  if (missing.length) throw new Error(`Missing required fields: ${missing.join(', ')}`);
 
-export interface BookingResponse {
-  success: boolean;
-  appointmentId?: string;
-  customerId?: string;
-  message: string;
-  error?: string;
-}
+  const duration = payload.duration
+    ? Number(payload.duration)
+    : (siteConfig?.appointments?.types?.find((t: any) => t.name === String(payload.appointmentType))?.duration ?? 60);
 
-// Universal Notion property builder that works with any schema
-function buildNotionProperty(value: any, type: string) {
-  switch (type) {
-    case 'title':
-      return { title: [{ text: { content: String(value) } }] };
-    case 'rich_text':
-      return { rich_text: [{ text: { content: String(value) } }] };
-    case 'number':
-      return { number: Number(value) };
-    case 'select':
-      return { select: { name: String(value) } };
-    case 'status':
-      return { status: { name: String(value) } };
-    case 'date':
-      return { date: { start: new Date(value).toISOString() } };
-    case 'email':
-      return { email: String(value) };
-    case 'phone_number':
-      return { phone_number: String(value) };
-    case 'checkbox':
-      return { checkbox: Boolean(value) };
-    case 'url':
-      return { url: String(value) };
-    default:
-      console.warn(`Unsupported property type: ${type}`);
-      return null;
-  }
-}
-
-// Dynamic schema detection
-async function getDatabaseSchema(notion: Client, databaseId: string) {
-  try {
-    const db = await notion.databases.retrieve({ database_id: databaseId });
-    const schema: Record<string, string> = {};
-    
-    for (const [key, prop] of Object.entries(db.properties)) {
-      schema[key] = (prop as any).type;
-    }
-    
-    return schema;
-  } catch (error) {
-    console.error('Error fetching database schema:', error);
-    return null;
-  }
-}
-
-// Smart field mapping for different database schemas
-function mapBookingToSchema(schema: Record<string, string>, booking: BookingRequest) {
-  const properties: Record<string, any> = {};
-  
-  // Common field mappings - try different possible field names
-  const fieldMappings = {
-    // Name fields
-    name: ['Name', 'Customer Name', 'Client Name', 'Full Name', 'Title'],
-    // Email fields
-    email: ['Email', 'Customer Email', 'Client Email'],
-    // Phone fields
-    phone: ['Phone', 'Phone Number', 'Customer Phone', 'Client Phone'],
-    // Service fields
-    service: ['Service', 'Service Type', 'Treatment', 'Appointment Type'],
-    // Date fields
-    date: ['Date', 'Appointment Date', 'Booking Date'],
-    // Duration fields
-    duration: ['Duration', 'Service Duration', 'Time Duration'],
-    // Price fields
-    price: ['Price', 'Cost', 'Amount', 'Service Price'],
-    // Status fields
-    status: ['Status', 'Appointment Status', 'Booking Status'],
-    // Notes fields
-    notes: ['Notes', 'Comments', 'Details', 'Description']
+  return {
+    name: String(payload.name),
+    email: String(payload.email),
+    phone: String(payload.phone),
+    appointmentType: String(payload.appointmentType),
+    date: String(payload.date),
+    time: String(payload.time),
+    duration,
+    price: payload.price ? String(payload.price) : undefined,
+    notes: payload.notes ? String(payload.notes) : undefined
   };
-  
-  // Map each booking field to the appropriate schema field
-  for (const [bookingField, possibleSchemaFields] of Object.entries(fieldMappings)) {
-    const value = booking[bookingField as keyof BookingRequest];
-    if (value === undefined || value === null || value === '') continue;
-    
-    // Find the first matching field in the schema
-    for (const schemaField of possibleSchemaFields) {
-      if (schema[schemaField]) {
-        const propType = schema[schemaField];
-        const builtProp = buildNotionProperty(value, propType);
-        if (builtProp) {
-          properties[schemaField] = builtProp;
-          break;
-        }
-      }
-    }
-  }
-  
-  return properties;
-}
-
-// Create customer with dynamic schema
-async function createCustomerDynamic(notion: Client, customersDbId: string, booking: BookingRequest) {
-  try {
-    const schema = await getDatabaseSchema(notion, customersDbId);
-    if (!schema) {
-      throw new Error('Could not fetch customer database schema');
-    }
-    
-    const customerData = {
-      name: booking.name,
-      email: booking.email,
-      phone: booking.phone,
-      notes: `Created from booking for ${booking.service} on ${booking.date}`
-    };
-    
-    const properties = mapBookingToSchema(schema, customerData);
-    
-    // Add customer type if the field exists
-    if (schema['Customer Type']) {
-      properties['Customer Type'] = buildNotionProperty('Booking Customer', 'select');
-    }
-    
-    const customer = await notion.pages.create({
-      parent: { database_id: customersDbId },
-      properties
-    });
-    
-    return customer;
-  } catch (error) {
-    console.error('Error creating customer:', error);
-    throw error;
-  }
-}
-
-// Create appointment with dynamic schema
-async function createAppointmentDynamic(notion: Client, appointmentsDbId: string, booking: BookingRequest) {
-  try {
-    const schema = await getDatabaseSchema(notion, appointmentsDbId);
-    if (!schema) {
-      throw new Error('Could not fetch appointment database schema');
-    }
-    
-    // Get available status options if status field exists
-    let availableStatuses: string[] = [];
-    let statusFieldName = '';
-    
-    // Check for status field with different possible names
-    const statusFieldNames = ['Status', 'status', 'Appointment Status', 'Booking Status'];
-    for (const fieldName of statusFieldNames) {
-      if (schema[fieldName]) {
-        statusFieldName = fieldName;
-        try {
-          const db = await notion.databases.retrieve({ database_id: appointmentsDbId });
-          const statusField = (db.properties as any)[fieldName];
-          if (statusField && statusField.status && statusField.status.options) {
-            availableStatuses = statusField.status.options.map((opt: any) => opt.name);
-            console.log(`Available statuses for ${fieldName}:`, availableStatuses);
-            break;
-          }
-        } catch (error) {
-          console.log(`Could not fetch status options for ${fieldName}, trying next field`);
-        }
-      }
-    }
-    
-    // Use first available status or skip status field entirely
-    let statusValue;
-    if (availableStatuses.length > 0) {
-      // Try to find a suitable status (look for common patterns)
-      const suitableStatuses = availableStatuses.filter(s => 
-        s.toLowerCase().includes('not started') || 
-        s.toLowerCase().includes('todo') || 
-        s.toLowerCase().includes('to do') ||
-        s.toLowerCase().includes('pending') ||
-        s.toLowerCase().includes('new') ||
-        s.toLowerCase().includes('open')
-      );
-      
-      statusValue = suitableStatuses.length > 0 ? suitableStatuses[0] : availableStatuses[0];
-      console.log(`Using status: ${statusValue}`);
-    } else {
-      console.log('No status field found or no available statuses, skipping status assignment');
-      statusValue = null;
-    }
-    
-    const appointmentData: any = {
-      name: `Appointment for ${booking.service}`,
-      service: booking.service,
-      date: `${booking.date}T${booking.time}`,
-      duration: booking.duration || 60,
-      price: booking.price || '$0',
-      notes: booking.notes || ''
-    };
-    
-    // Only add status if we found a valid one
-    if (statusValue && statusFieldName) {
-      appointmentData.status = statusValue;
-    }
-    
-    // Add customer info to appointment if fields exist
-    const appointmentWithCustomer = {
-      ...appointmentData,
-      name: booking.name,
-      phone: booking.phone,
-      email: booking.email
-    };
-    
-    const properties = mapBookingToSchema(schema, appointmentWithCustomer);
-    
-    // If we have a status value but it wasn't mapped properly, add it manually
-    if (statusValue && statusFieldName && !properties[statusFieldName]) {
-      properties[statusFieldName] = buildNotionProperty(statusValue, 'status');
-    }
-    
-    const appointment = await notion.pages.create({
-      parent: { database_id: appointmentsDbId },
-      properties
-    });
-    
-    return appointment;
-  } catch (error) {
-    console.error('Error creating appointment:', error);
-    throw error;
-  }
 }
 
 export const POST: APIRoute = async ({ request }) => {
-  console.log('=== UNIVERSAL BOOKING API CALLED ===');
-  
   try {
-    // Parse request
-    const booking: BookingRequest = await request.json();
-    console.log('Booking request:', booking);
-    
-    // Validate required fields
-    const requiredFields = ['name', 'email', 'phone', 'service', 'date', 'time'];
-    const missingFields = requiredFields.filter(field => !booking[field as keyof BookingRequest]);
-    
-    if (missingFields.length > 0) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: `Missing required fields: ${missingFields.join(', ')}` 
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+    const raw = await request.json().catch(() => null);
+    if (!raw) return new Response(JSON.stringify({ success: false, message: 'Invalid JSON body' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    const booking = validatePayload(raw);
+
+    // If Notion not configured, simulate
+    if (!process.env.NOTION_TOKEN || !process.env.NOTION_CUSTOMERS_DB_ID || !process.env.NOTION_APPOINTMENTS_DB_ID) {
+      return new Response(JSON.stringify({ success: true, simulated: true, appointmentId: `sim_${Date.now()}` }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
-    
-    // Check if Notion is configured
-    const { NOTION_TOKEN, NOTION_CUSTOMERS_DB_ID, NOTION_APPOINTMENTS_DB_ID } = process.env;
-    
-    if (!NOTION_TOKEN || !NOTION_CUSTOMERS_DB_ID || !NOTION_APPOINTMENTS_DB_ID) {
-      console.log('Notion not configured - simulating booking');
-      
-      // Simulate successful booking without Notion
-      const simulatedAppointmentId = `simulated_${Date.now()}`;
-      const simulatedCustomerId = `simulated_customer_${Date.now()}`;
-      
-      return new Response(
-        JSON.stringify({
-          success: true,
-          appointmentId: simulatedAppointmentId,
-          customerId: simulatedCustomerId,
-          message: 'Booking simulated successfully (Notion not configured)',
-          simulated: true
-        }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    // Initialize Notion client
-    const notion = new Client({ auth: NOTION_TOKEN });
-    
-    // Create customer
-    let customer;
+
+    // Build ISO start and check availability
+    const isoStart = new Date(`${booking.date}T${booking.time}`).toISOString();
+    const available = await checkAvailability(isoStart, booking.duration || 60);
+    if (!available) return new Response(JSON.stringify({ success: false, message: 'Selected slot not available' }), { status: 409, headers: { 'Content-Type': 'application/json' } });
+
+    // Create customer (best-effort)
+    let cust;
     try {
-      customer = await createCustomerDynamic(notion, NOTION_CUSTOMERS_DB_ID, booking);
-      console.log('✅ Customer created:', customer.id);
-    } catch (error) {
-      console.error('Customer creation failed:', error);
-      // Continue without customer if it fails
+      cust = await createCustomer({ 'Customer Name': booking.name, Email: booking.email, 'Phone Number': booking.phone, 'Customer Type': 'New Client' });
+    } catch (err) {
+      console.warn('createCustomer failed', err);
     }
-    
+
     // Create appointment
-    let appointment;
     try {
-      appointment = await createAppointmentDynamic(notion, NOTION_APPOINTMENTS_DB_ID, booking);
-      console.log('✅ Appointment created:', appointment.id);
-    } catch (error) {
-      console.error('Appointment creation failed:', error);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: `Failed to create appointment: ${error.message}`
-        }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
+      const svc = siteConfig.appointments.types.find((t: any) => t.name === booking.appointmentType);
+      const appointmentInput = {
+        Appointment: `Appointment – ${booking.appointmentType}`,
+        'Client Name': booking.name,
+        'Phone Number': booking.phone,
+        'Service Type': booking.appointmentType,
+        Date: isoStart,
+        Duration: String(booking.duration ?? svc?.duration ?? 60),
+        Price: booking.price ?? svc?.price ?? '$0',
+        Status: 'pending',
+        Notes: booking.notes ?? '',
+        Email: booking.email
+      };
+      const appt = await createAppointment(appointmentInput);
+      const res: BookingResponse = { success: true, appointmentId: appt.id, customerId: cust?.id, message: 'Booking created' };
+      return new Response(JSON.stringify(res), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    } catch (err: any) {
+      console.error('createAppointment failed', err);
+      return new Response(JSON.stringify({ success: false, message: 'Failed to create appointment', error: err?.message || String(err) }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
-    
-    return new Response(
-      JSON.stringify({
-        success: true,
-        appointmentId: appointment.id,
-        customerId: customer?.id,
-        message: 'Booking created successfully!',
-        storedInNotion: true
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
-    
-  } catch (error: any) {
-    console.error('=== BOOKING API ERROR ===', error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        message: error.message || 'Unknown error occurred'
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+  } catch (err: any) {
+    console.error('Booking API error', err);
+    return new Response(JSON.stringify({ success: false, message: err.message || 'Unknown error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 };

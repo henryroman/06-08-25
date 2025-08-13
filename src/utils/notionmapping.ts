@@ -1,40 +1,96 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+// src/utils/notionmapping.ts
+import type { Client } from '@notionhq/client';
 
-const __filenameNM = fileURLToPath(import.meta.url);
-const __dirnameNM = path.dirname(__filenameNM);
+type NotionSchema = Record<string, any>;
 
-export type Schema = Record<string,string>;
+/**
+ * Retrieve schema for a database (property names -> types)
+ */
+export async function getDatabaseSchema(notion: Client, databaseId: string): Promise<NotionSchema> {
+  if (!databaseId) throw new Error('databaseId required');
+  const db = await notion.databases.retrieve({ database_id: databaseId });
+  const schema: NotionSchema = {};
+  for (const [k, v] of Object.entries(db.properties || {})) {
+    schema[k] = (v as any).type;
+  }
+  return schema;
+}
 
-export const appointmentsSchema: Schema = JSON.parse(
-  fs.readFileSync(path.join(__dirnameNM, '../../schema-appointments.json'), 'utf-8')
-);
-export const customersSchema: Schema = JSON.parse(
-  fs.readFileSync(path.join(__dirnameNM, '../../schema-customers.json'), 'utf-8')
-);
-
-export function buildNotionProperties(
-  schema: Schema,
-  data: Record<string, any>
-): Record<string, any> {
+/**
+ * Build Notion properties given a schema and input data.
+ * - schema: propertyName -> propertyType
+ * - data: propertyName (or friendly name) -> value
+ *
+ * This function attempts to map provided data keys to actual schema property names:
+ *  - if data key exactly matches schema property, use that
+ *  - else looks for case-insensitive match
+ */
+export function buildNotionProperties(schema: NotionSchema, data: Record<string, any>): Record<string, any> {
   const props: Record<string, any> = {};
-  for (const [k, t] of Object.entries(schema)) {
-    if (data[k] == null) continue;
-    const v = data[k];
-    switch (t) {
-      case 'title':       props[k] = { title: [{ text: { content: String(v) } }] }; break;
-      case 'rich_text':   props[k] = { rich_text: [{ text: { content: String(v) } }] }; break;
-      case 'select':      props[k] = { select: { name: String(v) } }; break;
-      case 'status':      props[k] = { status: { name: String(v) } }; break;
-      case 'date':        props[k] = { date: { start: new Date(v).toISOString() } }; break;
-      case 'number':      props[k] = { number: Number(v) }; break;
-      case 'email':       props[k] = { email: String(v) }; break;
-      case 'phone_number':props[k] = { phone_number: String(v) }; break;
-      case 'checkbox':    props[k] = { checkbox: Boolean(v) }; break;
-      case 'relation':    props[k] = { relation: [{ id: String(v) }] }; break;
-      default:            console.warn(`Unsupported ${t} for ${k}`);
+  const schemaKeys = Object.keys(schema);
+
+  for (const [k, v] of Object.entries(data)) {
+    if (v === null || v === undefined || v === '') continue;
+
+    // find schema key
+    let matched = schemaKeys.find(sk => sk === k);
+    if (!matched) {
+      matched = schemaKeys.find(sk => sk.toLowerCase() === k.toLowerCase());
+    }
+    if (!matched) {
+      // attempt fuzzy: includes
+      matched = schemaKeys.find(sk => sk.toLowerCase().includes(k.toLowerCase()));
+    }
+    if (!matched) continue;
+
+    const type = schema[matched];
+    switch (type) {
+      case 'title':
+        props[matched] = { title: [{ text: { content: String(v) } }] };
+        break;
+      case 'rich_text':
+        props[matched] = { rich_text: [{ text: { content: String(v) } }] };
+        break;
+      case 'number':
+        props[matched] = { number: Number(v) };
+        break;
+      case 'select':
+        props[matched] = { select: { name: String(v) } };
+        break;
+      case 'multi_select':
+        props[matched] = { multi_select: Array.isArray(v) ? v.map(String).map(name => ({ name })) : [{ name: String(v) }] };
+        break;
+      case 'status':
+        props[matched] = { status: { name: String(v) } };
+        break;
+      case 'date':
+        // Accept ISO string or Date-like
+        const start = new Date(String(v));
+        if (!isNaN(start.getTime())) {
+          props[matched] = { date: { start: start.toISOString() } };
+        } else {
+          // try if v is already { start, end }
+          props[matched] = v;
+        }
+        break;
+      case 'email':
+        props[matched] = { email: String(v) };
+        break;
+      case 'phone_number':
+        props[matched] = { phone_number: String(v) };
+        break;
+      case 'checkbox':
+        props[matched] = { checkbox: Boolean(v) };
+        break;
+      case 'url':
+        props[matched] = { url: String(v) };
+        break;
+      default:
+        // fallback to rich_text
+        props[matched] = { rich_text: [{ text: { content: String(v) } }] };
+        break;
     }
   }
+
   return props;
 }

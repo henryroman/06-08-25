@@ -56,11 +56,11 @@ async function getDatabaseSchema(notion: Client, databaseId: string) {
   try {
     const db = await notion.databases.retrieve({ database_id: databaseId });
     const schema: Record<string, string> = {};
-    
+
     for (const [key, prop] of Object.entries(db.properties)) {
       schema[key] = (prop as any).type;
     }
-    
+
     return schema;
   } catch (error) {
     console.error('Error fetching database schema:', error);
@@ -71,7 +71,7 @@ async function getDatabaseSchema(notion: Client, databaseId: string) {
 // Smart field mapping for different database schemas
 function mapBookingToSchema(schema: Record<string, string>, booking: BookingRequest) {
   const properties: Record<string, any> = {};
-  
+
   // Common field mappings - try different possible field names
   const fieldMappings = {
     // Name fields
@@ -93,12 +93,12 @@ function mapBookingToSchema(schema: Record<string, string>, booking: BookingRequ
     // Notes fields
     notes: ['Notes', 'Comments', 'Details', 'Description']
   };
-  
+
   // Map each booking field to the appropriate schema field
   for (const [bookingField, possibleSchemaFields] of Object.entries(fieldMappings)) {
     const value = booking[bookingField as keyof BookingRequest];
     if (value === undefined || value === null || value === '') continue;
-    
+
     // Find the first matching field in the schema
     for (const schemaField of possibleSchemaFields) {
       if (schema[schemaField]) {
@@ -111,7 +111,7 @@ function mapBookingToSchema(schema: Record<string, string>, booking: BookingRequ
       }
     }
   }
-  
+
   return properties;
 }
 
@@ -122,26 +122,26 @@ async function createCustomerDynamic(notion: Client, customersDbId: string, book
     if (!schema) {
       throw new Error('Could not fetch customer database schema');
     }
-    
+
     const customerData = {
       name: booking.name,
       email: booking.email,
       phone: booking.phone,
       notes: `Created from booking for ${booking.service} on ${booking.date}`
     };
-    
+
     const properties = mapBookingToSchema(schema, customerData);
-    
+
     // Add customer type if the field exists
     if (schema['Customer Type']) {
       properties['Customer Type'] = buildNotionProperty('Booking Customer', 'select');
     }
-    
+
     const customer = await notion.pages.create({
       parent: { database_id: customersDbId },
       properties
     });
-    
+
     return customer;
   } catch (error) {
     console.error('Error creating customer:', error);
@@ -156,7 +156,7 @@ async function createAppointmentDynamic(notion: Client, appointmentsDbId: string
     if (!schema) {
       throw new Error('Could not fetch appointment database schema');
     }
-    
+
     const appointmentData = {
       name: `Appointment for ${booking.service}`,
       service: booking.service,
@@ -166,7 +166,7 @@ async function createAppointmentDynamic(notion: Client, appointmentsDbId: string
       notes: booking.notes || '',
       status: 'pending'
     };
-    
+
     // Add customer info to appointment if fields exist
     const appointmentWithCustomer = {
       ...appointmentData,
@@ -174,14 +174,14 @@ async function createAppointmentDynamic(notion: Client, appointmentsDbId: string
       phone: booking.phone,
       email: booking.email
     };
-    
+
     const properties = mapBookingToSchema(schema, appointmentWithCustomer);
-    
+
     const appointment = await notion.pages.create({
       parent: { database_id: appointmentsDbId },
       properties
     });
-    
+
     return appointment;
   } catch (error) {
     console.error('Error creating appointment:', error);
@@ -191,36 +191,36 @@ async function createAppointmentDynamic(notion: Client, appointmentsDbId: string
 
 export const POST: APIRoute = async ({ request }) => {
   console.log('=== UNIVERSAL BOOKING API CALLED ===');
-  
+
   try {
     // Parse request
     const booking: BookingRequest = await request.json();
     console.log('Booking request:', booking);
-    
+
     // Validate required fields
     const requiredFields = ['name', 'email', 'phone', 'service', 'date', 'time'];
     const missingFields = requiredFields.filter(field => !booking[field as keyof BookingRequest]);
-    
+
     if (missingFields.length > 0) {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: `Missing required fields: ${missingFields.join(', ')}` 
+        JSON.stringify({
+          success: false,
+          message: `Missing required fields: ${missingFields.join(', ')}`
         }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
-    
+
     // Check if Notion is configured
     const { NOTION_TOKEN, NOTION_CUSTOMERS_DB_ID, NOTION_APPOINTMENTS_DB_ID } = process.env;
-    
+
     if (!NOTION_TOKEN || !NOTION_CUSTOMERS_DB_ID || !NOTION_APPOINTMENTS_DB_ID) {
       console.log('Notion not configured - simulating booking');
-      
+
       // Simulate successful booking without Notion
       const simulatedAppointmentId = `simulated_${Date.now()}`;
       const simulatedCustomerId = `simulated_customer_${Date.now()}`;
-      
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -232,10 +232,10 @@ export const POST: APIRoute = async ({ request }) => {
         { status: 200, headers: { 'Content-Type': 'application/json' } }
       );
     }
-    
+
     // Initialize Notion client
     const notion = new Client({ auth: NOTION_TOKEN });
-    
+
     // Create customer
     let customer;
     try {
@@ -245,7 +245,7 @@ export const POST: APIRoute = async ({ request }) => {
       console.error('Customer creation failed:', error);
       // Continue without customer if it fails
     }
-    
+
     // Create appointment
     let appointment;
     try {
@@ -261,7 +261,7 @@ export const POST: APIRoute = async ({ request }) => {
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
-    
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -272,7 +272,7 @@ export const POST: APIRoute = async ({ request }) => {
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
-    
+
   } catch (error: any) {
     console.error('=== BOOKING API ERROR ===', error);
     return new Response(
