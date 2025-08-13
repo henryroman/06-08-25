@@ -33,12 +33,10 @@ export const POST: APIRoute = async ({ request }) => {
     // apply 10% discount for pay now
     const discounted = Math.round(priceCents * 0.9);
 
-    // validate required
     if (!name || !email || !appointmentType || !date || !time) {
       return new Response(JSON.stringify({ success: false, message: 'Missing required booking fields' }), { status: 400 });
     }
 
-    // build ISO for start and check availability
     const isoStart = new Date(`${date}T${time}`).toISOString();
     const isAvailable = await checkAvailability(isoStart, Number(duration));
     if (!isAvailable) return new Response(JSON.stringify({ success: false, message: 'Selected slot not available' }), { status: 409 });
@@ -50,7 +48,6 @@ export const POST: APIRoute = async ({ request }) => {
       console.warn('createCustomer failed', err);
     }
 
-    // create a pending appointment in Notion
     const appointmentInput = {
       Appointment: `Appointment – ${appointmentType}`,
       'Client Name': name,
@@ -68,9 +65,8 @@ export const POST: APIRoute = async ({ request }) => {
     const created = await createAppointment(appointmentInput);
     const notionPageId = created.id;
 
-    // create stripe checkout session
     const currency = (body.currency || 'usd').toLowerCase();
-    const amountToCharge = discounted; // user chose pay now -> discount applied
+    const amountToCharge = discounted;
     const successUrl = (process.env.PAYMENT_SUCCESS_URL || 'http://localhost:3000/pay-success') + `?bookingId=${encodeURIComponent(notionPageId)}`;
     const cancelUrl = (process.env.PAYMENT_CANCEL_URL || 'http://localhost:3000/pay-cancel') + `?bookingId=${encodeURIComponent(notionPageId)}`;
 
@@ -88,6 +84,8 @@ export const POST: APIRoute = async ({ request }) => {
         }
       ],
       metadata: { notionPageId, appointmentType, date, time },
+      // populate customer email so Stripe can send receipts if enabled
+      customer_email: email,
       success_url: successUrl,
       cancel_url: cancelUrl
     });
@@ -101,29 +99,6 @@ export const POST: APIRoute = async ({ request }) => {
       });
     } catch (err) {
       console.warn('updateAppointment failed', err);
-    }
-
-    // optionally notify n8n webhook with payment link (if configured)
-    if (process.env.N8N_WEBHOOK_URL) {
-      try {
-        await fetch(process.env.N8N_WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            event: 'payment_link_created',
-            notionPageId,
-            sessionUrl: session.url,
-            email,
-            name,
-            appointmentType,
-            date,
-            time,
-            amountCents: amountToCharge
-          })
-        });
-      } catch (err) {
-        console.warn('n8n notify failed', err);
-      }
     }
 
     return new Response(JSON.stringify({ success: true, url: session.url }), { status: 200, headers: { 'Content-Type': 'application/json' } });

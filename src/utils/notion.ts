@@ -45,7 +45,6 @@ export async function updateAppointment(pageId: string, data: Record<string, any
   const dbId = process.env.NOTION_APPOINTMENTS_DB_ID;
   if (!dbId) throw new Error('NOTION_APPOINTMENTS_DB_ID not configured');
   if (!notion) throw new Error('Notion client not initialized');
-  // fetch db schema to build properties correctly
   const schema = await getDatabaseSchema(notion, dbId);
   validateSchemaMapping(schema);
   const properties = buildNotionProperties(schema, data);
@@ -63,11 +62,7 @@ export async function getAppointment(pageId: string): Promise<any> {
   }
 }
 
-/**
- * Efficient availability check:
- * - We query appointments for the day once, extract start/end times,
- * - For the requested start & duration we check overlaps in-memory.
- */
+/* checkAvailability, getServiceTypes, getAppointments, getAvailableSlots same as before */
 export async function checkAvailability(startIso: string, duration: number): Promise<boolean> {
   if (!notion) return true;
   const dbId = process.env.NOTION_APPOINTMENTS_DB_ID;

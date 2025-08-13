@@ -3,20 +3,20 @@
 import { siteConfig } from '../../../config/site.config.mjs';
 const { components } = siteConfig;
 ---
-<div id="booking" class="fixed inset-0 z-50 hidden">
-  <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300" onclick="(window as any).closeBookingModal && (window as any).closeBookingModal()"></div>
+<div id="booking" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+  <div class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300" onclick="window.closeBookingModal && window.closeBookingModal()" role="button" aria-label="Close overlay"></div>
 
   <div class="fixed inset-0 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-    <div class="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
+    <div id="modal-content" class="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-95 opacity-0">
       <header class="px-6 py-4 border-b">
         <div class="flex justify-between items-center">
           <h3 class="text-lg font-semibold">Book an Appointment</h3>
-          <button aria-label="Close" onclick="(window as any).closeBookingModal && (window as any).closeBookingModal()" class="text-gray-500 hover:text-gray-700">&times;</button>
+          <button aria-label="Close" onclick="window.closeBookingModal && window.closeBookingModal()" class="text-gray-500 hover:text-gray-700">&times;</button>
         </div>
       </header>
 
       <div class="px-6 py-6 sm:px-8 sm:py-8 max-h-[calc(90vh-160px)] overflow-y-auto">
-        <form id="booking-form" class="space-y-6">
+        <form id="booking-form" class="space-y-6" novalidate>
           <div class="grid sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium mb-1">Full name</label>
@@ -78,7 +78,7 @@ const { components } = siteConfig;
 
       <div class="border-t px-6 py-4 bg-gray-50">
         <div class="flex gap-3">
-          <button type="button" onclick="(window as any).closeBookingModal && (window as any).closeBookingModal()" class="flex-1 py-2 border rounded">Cancel</button>
+          <button type="button" onclick="window.closeBookingModal && window.closeBookingModal()" class="flex-1 py-2 border rounded">Cancel</button>
           <button id="booking-submit" type="submit" form="booking-form" class="flex-1 py-2 rounded bg-primary-600 text-white">Book Appointment</button>
         </div>
       </div>
@@ -87,42 +87,41 @@ const { components } = siteConfig;
 </div>
 
 <script>
-(function () {
-  /** @type {HTMLFormElement | null} */
-  const form = /** @type {HTMLFormElement | null} */ (document.getElementById('booking-form'));
-  /** @type {HTMLInputElement | null} */
-  const dateInput = /** @type {HTMLInputElement | null} */ (document.getElementById('appointment-date'));
-  /** @type {HTMLSelectElement | null} */
-  const timeSelect = /** @type {HTMLSelectElement | null} */ (document.getElementById('appointment-time'));
-  /** @type {HTMLElement | null} */
-  const servicesContainer = /** @type {HTMLElement | null} */ (document.getElementById('services-container'));
-  /** @type {HTMLElement | null} */
-  const statusEl = /** @type {HTMLElement | null} */ (document.getElementById('booking-status'));
-  /** @type {HTMLInputElement | null} */
-  const durationInput = /** @type {HTMLInputElement | null} */ (document.getElementById('booking-duration'));
-  /** @type {HTMLInputElement | null} */
-  const priceInput = /** @type {HTMLInputElement | null} */ (document.getElementById('booking-price'));
-  /** @type {HTMLButtonElement | null} */
-  const submitBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById('booking-submit'));
-  /** @type {HTMLElement | null} */
-  const priceDisplay = /** @type {HTMLElement | null} */ (document.getElementById('price-display'));
+(() => {
+  // Elements (no TypeScript assertions — checks before usage)
+  const form = document.getElementById('booking-form');
+  const dateInput = document.getElementById('appointment-date');
+  const timeSelect = document.getElementById('appointment-time');
+  const servicesContainer = document.getElementById('services-container');
+  const statusEl = document.getElementById('booking-status');
+  const durationInput = document.getElementById('booking-duration');
+  const priceInput = document.getElementById('booking-price');
+  const submitBtn = document.getElementById('booking-submit');
+  const priceDisplay = document.getElementById('price-display');
 
-  if (dateInput) {
+  if (dateInput instanceof HTMLInputElement) {
     const today = new Date().toISOString().split('T')[0];
     dateInput.setAttribute('min', today);
   }
 
-  // load services from /api/services
+  // Utility: read site config safely (avoid TS property warnings)
+  const siteCfg = (typeof window !== 'undefined' && window['__SITE_CONFIG__']) ? window['__SITE_CONFIG__'] : {};
+
+  // load services from /api/services, fallback to site config
   async function loadServices() {
     try {
       const res = await fetch('/api/services');
+      if (!res.ok) throw new Error('no services endpoint');
       const json = await res.json();
       let services = Array.isArray(json.services) ? json.services : (json?.services || []);
-      if (!services.length) services = (window.__SITE_CONFIG__?.appointments?.types) || [];
+      if (!services.length) {
+        services = (siteCfg.appointments && siteCfg.appointments.types) || [];
+      }
       renderServices(services);
     } catch (err) {
-      console.error('loadServices error', err);
-      renderServices([]);
+      console.warn('loadServices error', err);
+      const fallback = (siteCfg.appointments && siteCfg.appointments.types) || [];
+      renderServices(fallback);
     }
   }
 
@@ -148,7 +147,8 @@ const { components } = siteConfig;
       `;
     }).join('');
 
-    Array.from(document.querySelectorAll('input[name="appointmentType"]')).forEach(el => {
+    // add change listeners after rendering radio inputs
+    Array.from(document.querySelectorAll('input[name="appointmentType"]')).forEach((el) => {
       el.addEventListener('change', (ev) => {
         const target = ev.target;
         if (!(target instanceof HTMLInputElement)) return;
@@ -156,12 +156,11 @@ const { components } = siteConfig;
         const root = target.closest('label');
         if (root) root.classList.add('border-primary-500','bg-primary-50');
 
-        if (durationInput) durationInput.value = target.getAttribute('data-duration') || '';
-        if (priceInput) priceInput.value = target.getAttribute('data-price') || '';
+        if (durationInput instanceof HTMLInputElement) durationInput.value = target.getAttribute('data-duration') || '';
+        if (priceInput instanceof HTMLInputElement) priceInput.value = target.getAttribute('data-price') || '';
 
-        // show price + discount if pay now checked
         updatePriceDisplay();
-        if (timeSelect) {
+        if (timeSelect instanceof HTMLSelectElement) {
           timeSelect.innerHTML = '<option value="">Select a date first...</option>';
           timeSelect.disabled = true;
         }
@@ -171,7 +170,6 @@ const { components } = siteConfig;
 
   function parsePriceStringToCents(priceStr) {
     if (!priceStr) return 0;
-    // priceStr like "$45" or "45" or "$40+"
     const cleaned = String(priceStr).replace(/[^\d\.]/g, '');
     const f = parseFloat(cleaned || '0');
     if (Number.isNaN(f)) return 0;
@@ -190,7 +188,7 @@ const { components } = siteConfig;
   function updatePriceDisplay() {
     const baseCents = getSelectedServicePriceCents();
     const payNowEl = document.querySelector('input[name="paymentMode"][value="pay_now"]');
-    const payingNow = payNowEl instanceof HTMLInputElement && payNowEl.checked;
+    const payingNow = (payNowEl instanceof HTMLInputElement) && payNowEl.checked;
     if (!priceDisplay) return;
     if (baseCents <= 0) { priceDisplay.innerHTML = 'Price not set'; return; }
     const baseD = (baseCents/100).toFixed(2);
@@ -198,27 +196,28 @@ const { components } = siteConfig;
       const disc = 0.1;
       const discounted = Math.round(baseCents * (1 - disc));
       priceDisplay.innerHTML = `Pay now and save 10%: <strong>$${(discounted/100).toFixed(2)}</strong> <span class="text-sm text-gray-500"> (was $${baseD})</span>`;
-      if (priceInput) priceInput.value = String(discounted);
+      if (priceInput instanceof HTMLInputElement) priceInput.value = String(discounted);
     } else {
       priceDisplay.innerHTML = `Pay at store: <strong>$${baseD}</strong>`;
-      if (priceInput) priceInput.value = String(baseCents);
+      if (priceInput instanceof HTMLInputElement) priceInput.value = String(baseCents);
     }
   }
 
-  // when paymentMode toggles
   document.addEventListener('change', (e) => {
     const t = e.target;
-    if (t && (t.name === 'paymentMode' || t.name === 'appointmentType')) updatePriceDisplay();
+    if (t instanceof HTMLInputElement) {
+      if (t.name === 'paymentMode' || t.name === 'appointmentType') updatePriceDisplay();
+    }
   });
 
-  if (dateInput && timeSelect) {
+  if (dateInput instanceof HTMLInputElement && timeSelect instanceof HTMLSelectElement) {
     dateInput.addEventListener('change', async () => {
       const selectedDate = dateInput.value;
       if (!selectedDate) return;
       timeSelect.disabled = true;
       timeSelect.innerHTML = '<option>Loading available times...</option>';
 
-      const dur = durationInput && durationInput.value ? Number(durationInput.value) : 60;
+      const dur = (durationInput instanceof HTMLInputElement && durationInput.value) ? Number(durationInput.value) : 60;
       try {
         const res = await fetch(`/api/availability?date=${encodeURIComponent(selectedDate)}&duration=${encodeURIComponent(String(dur))}`);
         const json = await res.json();
@@ -261,7 +260,7 @@ const { components } = siteConfig;
     });
   }
 
-  if (form instanceof HTMLFormElement) {
+  if (form) {
     form.addEventListener('submit', async (evt) => {
       evt.preventDefault();
       if (statusEl) statusEl.textContent = '';
@@ -275,10 +274,9 @@ const { components } = siteConfig;
         return;
       }
 
-      if (!booking.duration && durationInput) booking.duration = durationInput.value || '';
-      if (!booking.price && priceInput) booking.price = priceInput.value || '';
+      if (!booking.duration && durationInput instanceof HTMLInputElement) booking.duration = durationInput.value || '';
+      if (!booking.price && priceInput instanceof HTMLInputElement) booking.price = priceInput.value || '';
 
-      // normalize time
       try {
         const tVal = String(booking.time);
         if (tVal.includes('T') || tVal.includes('Z')) {
@@ -297,14 +295,14 @@ const { components } = siteConfig;
         return;
       }
 
-      // disable UI
-      if (submitBtn) {
+      if (submitBtn instanceof HTMLButtonElement) {
         submitBtn.disabled = true;
         submitBtn.dataset.orig = submitBtn.innerHTML;
         submitBtn.innerHTML = 'Booking...';
       }
 
-      const paymentMode = document.querySelector('input[name="paymentMode"]:checked')?.value || 'pay_later';
+      const paymentModeInput = document.querySelector('input[name="paymentMode"]:checked');
+      const paymentMode = (paymentModeInput instanceof HTMLInputElement) ? paymentModeInput.value : 'pay_later';
 
       try {
         if (paymentMode === 'pay_now') {
@@ -331,7 +329,7 @@ const { components } = siteConfig;
             return;
           } else {
             if (statusEl) { statusEl.style.color = 'crimson'; statusEl.textContent = json.message || 'Failed to create payment session'; }
-            if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = submitBtn.dataset.orig || 'Book Appointment'; }
+            if (submitBtn instanceof HTMLButtonElement) { submitBtn.disabled = false; submitBtn.innerHTML = submitBtn.dataset.orig || 'Book Appointment'; }
             return;
           }
         } else {
@@ -346,25 +344,25 @@ const { components } = siteConfig;
             if (statusEl) { statusEl.style.color = 'green'; statusEl.textContent = 'Booked successfully!'; }
             setTimeout(() => {
               if (form) form.reset();
-              (/** @type {any} */ (window)).closeBookingModal && (/** @type {any} */ (window)).closeBookingModal();
-              if (submitBtn) { submitBtn.innerHTML = submitBtn.dataset.orig || 'Book Appointment'; submitBtn.disabled = false; }
-              if (timeSelect) { timeSelect.innerHTML = '<option value="">Select a date first...</option>'; timeSelect.disabled = true; }
+              if (typeof window.closeBookingModal === 'function') window.closeBookingModal();
+              if (submitBtn instanceof HTMLButtonElement) { submitBtn.innerHTML = submitBtn.dataset.orig || 'Book Appointment'; submitBtn.disabled = false; }
+              if (timeSelect instanceof HTMLSelectElement) { timeSelect.innerHTML = '<option value="">Select a date first...</option>'; timeSelect.disabled = true; }
             }, 700);
           } else {
             if (statusEl) { statusEl.style.color = 'crimson'; statusEl.textContent = json.message || 'Failed to book appointment'; }
-            if (submitBtn) { submitBtn.innerHTML = submitBtn.dataset.orig || 'Book Appointment'; submitBtn.disabled = false; }
+            if (submitBtn instanceof HTMLButtonElement) { submitBtn.innerHTML = submitBtn.dataset.orig || 'Book Appointment'; submitBtn.disabled = false; }
           }
         }
       } catch (err) {
         console.error('submit error', err);
         if (statusEl) { statusEl.style.color = 'crimson'; statusEl.textContent = 'Network error while booking'; }
-        if (submitBtn) { submitBtn.innerHTML = submitBtn.dataset.orig || 'Book Appointment'; submitBtn.disabled = false; }
+        if (submitBtn instanceof HTMLButtonElement) { submitBtn.innerHTML = submitBtn.dataset.orig || 'Book Appointment'; submitBtn.disabled = false; }
       }
     });
   }
 
-  // expose open/close
-  (window).openBookingModal = function () {
+  // Expose open/close functions on window (no TS declarations)
+  window.openBookingModal = function () {
     const modal = document.getElementById('booking');
     if (!modal) return;
     modal.classList.remove('hidden');
@@ -380,7 +378,7 @@ const { components } = siteConfig;
     updatePriceDisplay();
   };
 
-  (window).closeBookingModal = function () {
+  window.closeBookingModal = function () {
     const modal = document.getElementById('booking');
     if (!modal) return;
     const mc = document.getElementById('modal-content');
@@ -395,13 +393,15 @@ const { components } = siteConfig;
   };
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') (window).closeBookingModal && (window).closeBookingModal();
+    if (e.key === 'Escape' && typeof window.closeBookingModal === 'function') window.closeBookingModal();
   });
 
-  if (!document.getElementById('booking')?.classList.contains('hidden')) loadServices();
+  // If modal is visible on load, initialize services
+  const initialModal = document.getElementById('booking');
+  if (initialModal && !initialModal.classList.contains('hidden')) loadServices();
 })();
 </script>
 
 <style>
-/* tailwind classes used above */
+/* keep Tailwind classes in markup; any small extra CSS can go here */
 </style>

@@ -12,7 +12,7 @@ const { hero } = content;
     <div class="absolute top-32 right-10 w-48 h-48 sm:w-72 sm:h-72 bg-secondary-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style="animation-delay: 2s"></div>
     <div class="absolute -bottom-8 left-32 w-48 h-48 sm:w-72 sm:h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style="animation-delay: 4s"></div>
   </div>
-  
+
   <div class="container mx-auto px-4 relative z-10">
     <div class="text-center max-w-4xl mx-auto animate-slideUp">
       <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold ${hero.textColor} mb-6 leading-tight">
@@ -23,20 +23,20 @@ const { hero } = content;
       </p>
       <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
         <button
-          class="${siteConfig.components.buttons.primaryMobile} sm:${siteConfig.components.buttons.primary} text-lg sm:text-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+          class="${siteConfig.components.buttons.primaryMobile} sm:${siteConfig.components.buttons.primary} text-lg sm:text-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
           onclick="window.openBookingModal && window.openBookingModal()"
         >
           <i class="fas fa-calendar-check mr-2"></i>
           {hero.cta}
         </button>
-        <a href="#contact" class="${siteConfig.components.buttons.outline} text-lg px-6 sm:px-8 py-3 sm:py-4 flex items-center justify-center hover:shadow-lg transition-all duration-300">
+        <a href="#contact" class="${siteConfig.components.buttons.outline} text-lg sm:text-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
           <i class="fas fa-info-circle mr-2"></i>
           Learn More
         </a>
       </div>
     </div>
   </div>
-  
+
   <!-- Scroll indicator -->
   <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
     <a href="#features" class="text-primary-600 hover:text-primary-700 transition-colors">
