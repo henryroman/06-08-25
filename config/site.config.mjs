@@ -49,6 +49,29 @@
       900: '#18181b'
     },
 
+    gradients: [
+    "bg-gradient-to-br from-primary-100/20 via-secondary-100/20 to-primary-200/20",
+    "bg-gradient-to-tr from-primary-200/30 via-secondary-50/20 to-primary-100/30",
+    "bg-gradient-to-r from-primary-50 via-secondary-50 to-primary-100",
+    "bg-gradient-to-bl from-primary-200 via-secondary-100 to-primary-300",
+    "bg-gradient-to-t from-secondary-50 via-primary-100 to-secondary-200",
+    "bg-gradient-to-br from-primary-50 via-secondary-200 to-primary-300",
+    "bg-gradient-to-tr from-secondary-100 via-primary-200 to-secondary-300",
+    "bg-gradient-to-bl from-primary-100 via-secondary-50 to-primary-200",
+    "bg-gradient-to-t from-primary-200 via-secondary-100 to-primary-50",
+    "bg-gradient-to-r from-secondary-200 via-primary-100 to-secondary-50"
+  ],
+
+
+  testimonialBackground: "bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/40",
+  blobs: {
+    "blob1": "bg-blue-100",
+    "blob2": "bg-emerald-100",
+    "blob3": "bg-pink-100"
+  },
+  iconSet: "fas",
+
+
     fonts: {
       heading: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       body: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
@@ -237,6 +260,8 @@
     timezone: "America/New_York",
     bufferTime: 30 // 30-minute gaps
   },
+
+
 
   // Google Places Integration
   googlePlaces: {

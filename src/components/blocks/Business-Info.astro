@@ -3,6 +3,7 @@ import business from '../../data/business.json';
 ---
 <section class="business-info py-16 bg-gray-50">
   <div class="container mx-auto px-4 grid md:grid-cols-2 gap-8">
+    {/* Left column */}
     <div>
       <h2 class="text-4xl font-bold mb-4">{business.name}</h2>
       <p class="text-lg mb-4">{business.address}</p>
@@ -26,14 +27,16 @@ import business from '../../data/business.json';
       )}
     </div>
 
-    {/* Right column */}
-    <div class="text-left md:text-right">
-      <h3 class="text-2xl font-semibold mb-2">Opening Hours</h3>
-      <ul class="list-disc md:list-none md:space-y-1 md:pl-0">
-        {business.openingHours?.map((line) => (
-          <li>{line}</li>
-        ))}
-      </ul>
+    {/* Right column: Opening Hours */}
+    <div class="text-left md:text-right md:pl-8 lg:pl-12 flex md:justify-end">
+      <div>
+        <h3 class="text-2xl font-semibold mb-2">Opening Hours</h3>
+        <ul class="list-nonelist-none md:space-y-1 md:pl-4 lg:pl-6">
+          {business.openingHours?.map((line) => (
+            <li>{line}</li>
+          ))}
+        </ul>
+      </div>
     </div>
   </div>
 </section>

@@ -1,34 +1,36 @@
 {
-    "version": "1.0.0",
-    "name": "website-builder-template",
-    "scripts": {
-        "build": "node scripts/build.mjs build",
-        "build:config": "node scripts/build-tailwind-config.mjs",
-        "build:places": "node scripts/build-places.js",
-        "build:no-places": "astro build",
-        "dev": "astro dev",
-        "preview": "astro preview",
-        "start": "node dist/server/entry.mjs",
-        "deploy": "bash scripts/deploy.sh",
-        "config:validate": "node scripts/build.mjs validate",
-        "schema:generate": "node --loader ts-node/esm tools/generate-notion-mapping.ts"
-    },
-    "devDependencies": {
-        "@types/node": "^20.19.10",
-        "ts-node": "^10.9.2"
-    },
-    "type": "module",
-    "dependencies": {
-        "@astrojs/node": "^8.3.2",
-        "@astrojs/tailwind": "^5.1.0",
-        "@notionhq/client": "^2.2.15",
-        "astro": "^4.15.4",
-        "daisyui": "^5.0.50",
-        "dotenv": "^17.2.1",
-        "node-fetch": "^3.3.2",
-        "stripe": "^18.0.0",
-        "tailwindcss": "^3.4.3",
-        "terser": "^5.43.1"
-    },
-    "private": true
+  "name": "website-builder-template",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs build",
+    "build:config": "node scripts/build-tailwind-config.mjs",
+    "build:places": "node scripts/build-places.js",
+    "build:no-places": "astro build",
+    "build:all": "npm run build:places && npm run build:config && npm run build",
+    "dev": "astro dev",
+    "preview": "astro preview",
+    "start": "node dist/server/entry.mjs",
+    "deploy": "bash scripts/deploy.sh",
+    "config:validate": "node scripts/build.mjs validate",
+    "schema:generate": "node --loader ts-node/esm tools/generate-notion-mapping.ts"
+  },
+  "dependencies": {
+    "@astrojs/node": "^8.3.2",
+    "@astrojs/tailwind": "^5.1.0",
+    "@notionhq/client": "^2.2.15",
+    "astro": "^4.15.4",
+    "daisyui": "^5.0.50",
+    "dotenv": "^17.2.1",
+    "node-fetch": "^3.3.2",
+    "prettier": "^3.6.2",
+    "stripe": "^18.0.0",
+    "tailwindcss": "^3.4.3",
+    "terser": "^5.43.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.10",
+    "ts-node": "^10.9.2"
+  }
 }

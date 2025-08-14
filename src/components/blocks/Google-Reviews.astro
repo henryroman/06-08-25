@@ -2,7 +2,7 @@
 import { siteConfig } from '../../../config/site.config.mjs';
 import business from '../../data/business.json';
 const { testimonials } = siteConfig.content;
-const { layout, buildTimeTheme } = siteConfig;
+const { layout, theme } = siteConfig;
 const reviews = (business.reviews || testimonials || []) as Array<{
   author: string;
   rating: number;
@@ -20,11 +20,11 @@ const truncateText = (text: string, maxLength: number = 120): string => {
 };
 
 // Use build-time theme colors or fallbacks
-const testimonialBg = buildTimeTheme?.testimonialBackground || 'bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/40';
-const blob1Class = buildTimeTheme?.blobs?.blob1 || 'bg-blue-100';
-const blob2Class = buildTimeTheme?.blobs?.blob2 || 'bg-emerald-100';
-const blob3Class = buildTimeTheme?.blobs?.blob3 || 'bg-pink-100';
-const iconSetClass = buildTimeTheme?.iconSet || 'fas';
+const testimonialBg = theme?.testimonialBackground || 'bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/40';
+const blob1Class = theme?.blobs?.blob1 || 'bg-blue-100';
+const blob2Class = theme?.blobs?.blob2 || 'bg-emerald-100';
+const blob3Class =theme?.blobs?.blob3 || 'bg-pink-100';
+const iconSetClass = theme?.iconSet || 'fas';
 ---
 
 {reviews.length > 0 && (

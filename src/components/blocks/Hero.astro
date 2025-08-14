@@ -2,38 +2,47 @@
 import { siteConfig } from "../../../config/site.config.mjs";
 const { business, content, layout, theme } = siteConfig;
 const { hero } = content;
+
+// Pick a random gradient each build
+const randomGradient = theme.gradients[Math.floor(Math.random() * theme.gradients.length)];
 ---
 
-<section class={`${layout.sections.padding} ${layout.sections.mobile?.padding || ''} ${hero.background} relative overflow-hidden`}>
-  <!-- Background decoration using theme colors -->
-  <div class="absolute inset-0 bg-gradient-to-br from-primary-100/20 via-secondary-100/20 to-primary-200/20"></div>
+<section class={`${layout.sections.padding} ${layout.sections.mobile?.padding || ''} ${randomGradient} relative overflow-hidden`}>
+  <!-- Blurred decorative shapes -->
   <div class="absolute top-0 left-0 w-full h-full">
     <div class="absolute top-10 left-10 w-48 h-48 sm:w-72 sm:h-72 bg-primary-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
     <div class="absolute top-32 right-10 w-48 h-48 sm:w-72 sm:h-72 bg-secondary-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style="animation-delay: 2s"></div>
     <div class="absolute -bottom-8 left-32 w-48 h-48 sm:w-72 sm:h-72 bg-primary-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style="animation-delay: 4s"></div>
+    <!-- Extra shapes for more variation -->
+    <div class="absolute -top-16 right-32 w-56 h-56 bg-secondary-100 rounded-full mix-blend-multiply filter blur-2xl opacity-60 animate-pulse" style="animation-delay: 1s"></div>
+    <div class="absolute bottom-20 right-1/4 w-40 h-40 bg-primary-100 rounded-full mix-blend-multiply filter blur-lg opacity-50 animate-pulse" style="animation-delay: 3s"></div>
   </div>
 
   <div class="container mx-auto px-4 relative z-10">
     <div class="text-center max-w-4xl mx-auto animate-slideUp">
-      <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold ${hero.textColor} mb-6 leading-tight">
+      <h1 class={`text-3xl sm:text-4xl md:text-6xl font-bold ${hero.textColor} mb-6 leading-tight`}>
         {hero.headline}
       </h1>
       <p class="text-base sm:text-lg md:text-xl text-gray-700 mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed">
         {hero.subheadline}
       </p>
       <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
-        <button
-          class="${siteConfig.components.buttons.primaryMobile} sm:${siteConfig.components.buttons.primary} text-lg sm:text-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
-          onclick="window.openBookingModal && window.openBookingModal()"
-        >
-          <i class="fas fa-calendar-check mr-2"></i>
-          {hero.cta}
-        </button>
-        <a href="#contact" class="${siteConfig.components.buttons.outline} text-lg sm:text-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
-          <i class="fas fa-info-circle mr-2"></i>
-          Learn More
-        </a>
-      </div>
+  <button
+    class={`${siteConfig.components.buttons.primaryMobile} sm:${siteConfig.components.buttons.primary} px-6 py-3 md:px-4 md:py-2 lg:px-4 lg:py-2 text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300`}
+    onclick="window.openBookingModal && window.openBookingModal()"
+  >
+    <i class="fas fa-calendar-check mr-2"></i>
+    {hero.cta}
+  </button>
+  <a
+    href="#contact"
+    class={`${siteConfig.components.buttons.primaryMobile} sm:${siteConfig.components.buttons.primary} px-6 py-3 md:px-4 md:py-2 lg:px-4 lg:py-2 text-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300`}
+  >
+    <i class="fas fa-info-circle mr-2"></i>
+    Learn More
+  </a>
+</div>
+
     </div>
   </div>
 
