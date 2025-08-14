@@ -1,4 +1,7 @@
 ---
+import { siteConfig } from "../../../config/site.config.mjs";
+const { components } = siteConfig;
+
 export interface Props {
   type?: 'text' | 'email' | 'tel' | 'password' | 'date' | 'time';
   placeholder?: string;
@@ -7,6 +10,8 @@ export interface Props {
   id?: string;
   value?: string;
   class?: string;
+  mobile?: boolean;
+  focused?: boolean;
 }
 
 const {
@@ -17,11 +22,16 @@ const {
   id,
   value,
   class: className = '',
+  mobile = false,
+  focused = false,
   ...rest
 } = Astro.props;
 
-const baseClasses = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors duration-200';
-const inputClasses = `${baseClasses} ${className}`;
+const inputClasses = focused
+  ? components.inputs.focused
+  : mobile
+    ? components.inputs.defaultMobile
+    : components.inputs.default;
 ---
 
 <input

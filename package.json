@@ -2,13 +2,15 @@
     "version": "1.0.0",
     "name": "website-builder-template",
     "scripts": {
-        "build": "node scripts/build-places.js && astro build",
-        "build-places": "node scripts/build-places.js",
+        "build": "node scripts/build.mjs build",
+        "build:config": "node scripts/build-tailwind-config.mjs",
+        "build:places": "node scripts/build-places.js",
         "build:no-places": "astro build",
+        "dev": "astro dev",
         "preview": "astro preview",
         "start": "node dist/server/entry.mjs",
-        "dev": "astro dev",
         "deploy": "bash scripts/deploy.sh",
+        "config:validate": "node scripts/build.mjs validate",
         "schema:generate": "node --loader ts-node/esm tools/generate-notion-mapping.ts"
     },
     "devDependencies": {

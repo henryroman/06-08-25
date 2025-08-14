@@ -1,22 +1,27 @@
 ---
+import { siteConfig } from "../../../config/site.config.mjs";
+const { components } = siteConfig;
+
 export interface Props {
   title?: string;
   variant?: 'default' | 'featured' | 'minimal';
   class?: string;
+  mobile?: boolean;
 }
 
 const {
   title,
   variant = 'default',
-  class: className = ''
+  class: className = '',
+  mobile = false
 } = Astro.props;
 
-const baseClasses = 'rounded-lg transition-all duration-200';
+const baseClasses = 'transition-all duration-200';
 
 const variantClasses = {
-  default: 'bg-white border border-gray-200 shadow-sm hover:shadow-md p-6',
-  featured: 'bg-gradient-to-br from-pink-50 to-purple-50 border-2 border-pink-200 shadow-lg p-8',
-  minimal: 'bg-transparent p-4'
+  default: mobile ? components.cards.defaultMobile : components.cards.default,
+  featured: mobile ? components.cards.featuredMobile : components.cards.featured,
+  minimal: mobile ? components.cards.minimalMobile : components.cards.minimal
 };
 
 const cardClasses = `${baseClasses} ${variantClasses[variant]} ${className}`;

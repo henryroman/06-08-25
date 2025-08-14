@@ -1,7 +1,7 @@
 ---
 // src/components/blocks/BookingModal.astro
 import { siteConfig } from '@/config/site.config.mjs';
-const { components } = siteConfig;
+const { components, theme } = siteConfig;
 const publishableKey = import.meta.env.PUBLIC_STRIPE_PUBLISHABLE_KEY;
 ---
 <script src="https://js.stripe.com/basil/stripe.js"></script>
@@ -88,7 +88,7 @@ const publishableKey = import.meta.env.PUBLIC_STRIPE_PUBLISHABLE_KEY;
       <div class="border-t px-6 py-4 bg-gray-50">
         <div class="flex gap-3">
           <button type="button" onclick="window.closeBookingModal && window.closeBookingModal()" class="flex-1 py-2 border rounded">Cancel</button>
-          <button id="booking-submit" type="submit" form="booking-form" class="flex-1 py-2 rounded bg-primary-600 text-white">Continue</button>
+          <button id="booking-submit" type="submit" form="booking-form" class="flex-1 py-2 rounded bg-primary-600 text-white hover:bg-primary-700 transition-colors">Continue</button>
         </div>
       </div>
     </div>

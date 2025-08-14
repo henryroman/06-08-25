@@ -1,14 +1,19 @@
 ---
+import { siteConfig } from "../../../config/site.config.mjs";
+const { components } = siteConfig;
+
 export interface Props {
   id: string;
   size?: "sm" | "md" | "lg" | "xl";
   closable?: boolean;
+  mobile?: boolean;
 }
 
 const {
   id,
   size = "md",
-  closable = true
+  closable = true,
+  mobile = false
 } = Astro.props;
 
 const sizeClasses = {
@@ -19,7 +24,7 @@ const sizeClasses = {
 };
 
 const modalClasses = "modal fixed inset-0 z-50 overflow-y-auto hidden";
-const contentClasses = `modal-content bg-white rounded-lg shadow-xl mx-auto mt-10 ${sizeClasses[size]} w-full max-h-screen overflow-y-auto`;
+const contentClasses = `modal-content ${mobile ? components.modals.contentMobile : components.modals.content} ${sizeClasses[size]}`;
 
 declare global {
   interface Window {
@@ -30,7 +35,7 @@ declare global {
 ---
 
 <div id={id} class={modalClasses}>
-  <div class="modal-backdrop fixed inset-0 bg-black bg-opacity-50" data-modal-close={closable ? id : undefined}></div>
+  <div class={`modal-backdrop fixed inset-0 ${components.modals.overlay}`} data-modal-close={closable ? id : undefined}></div>
   <div class="relative p-4 min-h-screen flex items-center justify-center">
     <div class={contentClasses}>
       {(closable) && (
@@ -39,10 +44,10 @@ declare global {
           class="modal-close text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none absolute top-4 right-4"
           data-modal-close={id}
         >
-          &times;
+          ×
         </button>
       )}
-      <div class="modal-body p-6">
+      <div class={`modal-body ${mobile ? components.modals.bodyMobile : components.modals.body}`}>
         <slot />
       </div>
     </div>
