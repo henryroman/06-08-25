@@ -103,6 +103,18 @@ const publishableKey = import.meta.env.PUBLIC_STRIPE_PUBLISHABLE_KEY;
   const form = document.getElementById('booking-form');
   const dateInput = document.getElementById('appointment-date');
   const timeSelect = document.getElementById('appointment-time');
+
+// 👇 NEW: make whole date box clickable
+if (dateInput instanceof HTMLInputElement) {
+  const dateWrapper = dateInput.closest('div');
+  if (dateWrapper) {
+    dateWrapper.addEventListener('click', (e) => {
+      if (e.target !== dateInput) {
+        dateInput.showPicker?.();
+      }
+    });
+  }
+}
   const servicesContainer = document.getElementById('services-container');
   const statusEl = document.getElementById('booking-status');
   const durationInput = document.getElementById('booking-duration');

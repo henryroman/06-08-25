@@ -4,18 +4,26 @@ export interface Props {
   description?: string;
 }
 
-import business from '../data/business.json';
 import { siteConfig } from '../../config/site.config.mjs';
+import * as businessData from '../data/business.json' assert { type: 'json' };
+
 const { social, layout, theme, seo } = siteConfig;
 
-// Use fetched business data if available, otherwise fall back to config
-const businessName = business?.name || siteConfig.business.name;
-const businessTagline = business?.tagline || siteConfig.business.tagline;
-const businessDescription = business?.description || siteConfig.business.description;
+// Use business.json if available, otherwise fallback to siteConfig
+const businessName = businessData?.name || siteConfig.business.name;
+const businessTagline = siteConfig.business.tagline;
+const businessDescription = siteConfig.business.description;
+const businessAddress = businessData?.address || siteConfig.business.address;
+const businessPhone = businessData?.phone || siteConfig.business.phone;
+const businessEmail = businessData?.email || siteConfig.business.email;
 
+// Page meta
 const { title, description = businessDescription } = Astro.props;
-const pageTitle = title.includes(businessName) ? title : `${businessName} – ${businessTagline}`;
+const pageTitle = title.includes(businessName)
+  ? title
+  : `${businessName} – ${businessTagline}`;
 ---
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -24,30 +32,30 @@ const pageTitle = title.includes(businessName) ? title : `${businessName} – ${
     <meta name="description" content={description} />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="keywords" content={seo.keywords.join(', ')} />
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={seo.ogImage} />
-    
+
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:title" content={pageTitle} />
     <meta property="twitter:description" content={description} />
     <meta property="twitter:image" content={seo.ogImage} />
     <meta property="twitter:creator" content={seo.twitterHandle} />
-    
+
     <link rel="icon" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    
+
     <title>{pageTitle}</title>
-    
+
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    
+
     <style is:global>
       :root {
         --body-font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -55,36 +63,36 @@ const pageTitle = title.includes(businessName) ? title : `${businessName} – ${
         --fade-in-animation: fadeIn 0.5s ease-in-out;
         --slide-up-animation: slideUp 0.6s ease-out;
       }
-      
+
       html {
         font-family: var(--body-font);
       }
-      
+
       h1, h2, h3, h4, h5, h6 {
         font-family: var(--heading-font);
       }
-      
+
       /* Custom animations */
       @keyframes fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
       }
-      
+
       @keyframes slideUp {
-        from { 
+        from {
           opacity: 0;
           transform: translateY(20px);
         }
-        to { 
+        to {
           opacity: 1;
           transform: translateY(0);
         }
       }
-      
+
       .animate-fadeIn {
         animation: var(--fade-in-animation);
       }
-      
+
       .animate-slideUp {
         animation: var(--slide-up-animation);
       }
@@ -105,14 +113,14 @@ const pageTitle = title.includes(businessName) ? title : `${businessName} – ${
         <a href="/" class="text-xl sm:text-2xl font-bold text-gray-900 hover:text-primary-600 transition-colors">
           {businessName}
         </a>
-        
+
         <!-- Desktop Navigation -->
         <ul class="hidden md:flex gap-6 lg:gap-8 items-center">
           <li><a href="/" class="text-gray-700 hover:text-primary-600 font-medium transition-colors">Home</a></li>
           <li><a href="/services" class="text-gray-700 hover:text-primary-600 font-medium transition-colors">Services</a></li>
           <li><a href="/#contact" class="text-gray-700 hover:text-primary-600 font-medium transition-colors">Contact</a></li>
           <li>
-            <button 
+            <button
               onclick="window.openBookingModal && window.openBookingModal()"
               class="${siteConfig.components.buttons.primary}"
             >
@@ -120,16 +128,16 @@ const pageTitle = title.includes(businessName) ? title : `${businessName} – ${
             </button>
           </li>
         </ul>
-        
+
         <!-- Mobile Menu Button -->
-        <button 
+        <button
           class="md:hidden text-gray-700 hover:text-primary-600 transition-colors p-2"
           onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
         >
           <i class="fas fa-bars text-xl"></i>
         </button>
       </nav>
-      
+
       <!-- Mobile Menu -->
       <div id="mobile-menu" class="hidden bg-white border-t border-gray-200 md:hidden">
         <div class="container mx-auto px-4 py-4">
@@ -138,7 +146,7 @@ const pageTitle = title.includes(businessName) ? title : `${businessName} – ${
             <li><a href="/services" class="block text-gray-700 hover:text-primary-600 font-medium transition-colors py-3 px-4 rounded-lg hover:bg-gray-50">Services</a></li>
             <li><a href="/#contact" class="block text-gray-700 hover:text-primary-600 font-medium transition-colors py-3 px-4 rounded-lg hover:bg-gray-50">Contact</a></li>
             <li class="pt-2">
-              <button 
+              <button
                 onclick="window.openBookingModal && window.openBookingModal()"
                 class="${siteConfig.components.buttons.primaryMobile}"
               >
@@ -163,30 +171,31 @@ const pageTitle = title.includes(businessName) ? title : `${businessName} – ${
           <div>
             <h3 class="text-lg font-semibold text-gray-900 mb-4">{businessName}</h3>
             <p class="text-gray-600 mb-4 text-sm">{businessTagline}</p>
-            {business?.address && (
-              <div class="flex items-start mb-3">
-                <i class="fas fa-map-marker-alt text-primary-600 mt-1 mr-3 w-4 flex-shrink-0"></i>
-                <p class="text-gray-600 text-sm leading-relaxed">{business.address}</p>
-              </div>
-            )}
-            {business?.phone && (
-              <div class="flex items-center mb-3">
-                <i class="fas fa-phone text-primary-600 mr-3 w-4 flex-shrink-0"></i>
-                <a href={`tel:${business.phone}`} class="text-gray-600 text-sm hover:text-primary-600 transition-colors">
-                  {business.phone}
-                </a>
-              </div>
-            )}
-            {business?.email && (
-              <div class="flex items-center">
-                <i class="fas fa-envelope text-primary-600 mr-3 w-4 flex-shrink-0"></i>
-                <a href={`mailto:${business.email}`} class="text-gray-600 text-sm hover:text-primary-600 transition-colors">
-                  {business.email}
-                </a>
-              </div>
-            )}
+            {businessAddress && (
+  <div class="flex items-start mb-3">
+    <i class="fas fa-map-marker-alt text-primary-600 mt-1 mr-3 w-4 flex-shrink-0"></i>
+    <p class="text-gray-600 text-sm leading-relaxed">{businessAddress}</p>
+  </div>
+)}
+{businessPhone && (
+  <div class="flex items-center mb-3">
+    <i class="fas fa-phone text-primary-600 mr-3 w-4 flex-shrink-0"></i>
+    <a href={`tel:${businessPhone}`} class="text-gray-600 text-sm hover:text-primary-600 transition-colors">
+      {businessPhone}
+    </a>
+  </div>
+)}
+{businessEmail && (
+  <div class="flex items-center">
+    <i class="fas fa-envelope text-primary-600 mr-3 w-4 flex-shrink-0"></i>
+    <a href={`mailto:${businessEmail}`} class="text-gray-600 text-sm hover:text-primary-600 transition-colors">
+      {businessEmail}
+    </a>
+  </div>
+)}
+
           </div>
-          
+
           <!-- Quick Links -->
           <div>
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Links</h3>
@@ -195,7 +204,7 @@ const pageTitle = title.includes(businessName) ? title : `${businessName} – ${
               <li><a href="/services" class="text-gray-600 hover:text-primary-600 transition-colors py-1 block">Services</a></li>
               <li><a href="/#contact" class="text-gray-600 hover:text-primary-600 transition-colors py-1 block">Contact</a></li>
               <li>
-                <button 
+                <button
                   onclick="window.openBookingModal && window.openBookingModal()"
                   class="text-gray-600 hover:text-primary-600 transition-colors text-left w-full py-1"
                 >
@@ -204,17 +213,17 @@ const pageTitle = title.includes(businessName) ? title : `${businessName} – ${
               </li>
             </ul>
           </div>
-          
+
           <!-- Social Links -->
           <div>
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Follow Us</h3>
             {social.length > 0 && (
               <div class="flex gap-4">
                 {social.map((link) => (
-                  <a 
-                    href={link.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     aria-label={link.name}
                     class={`${link.color} hover:opacity-80 transition-opacity`}
                   >
@@ -225,7 +234,7 @@ const pageTitle = title.includes(businessName) ? title : `${businessName} – ${
             )}
           </div>
         </div>
-        
+
         <!-- Copyright -->
         <div class="border-t border-gray-200 mt-8 pt-8 text-center">
           <p class="text-gray-600 text-sm">
