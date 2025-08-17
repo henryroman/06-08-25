@@ -21,9 +21,9 @@ async function buildProject() {
     console.log('\n🎨 Step 1: Generating Tailwind configuration...');
     await generateTailwindConfig();
 
-    // Step 2: Astro build
+    // Step 2: Astro build (no more `build:no-places`)
     console.log('\n📦 Step 2: Building Astro project...');
-    await runCommand('npm', ['run', 'build:no-places']);
+    await runCommand('astro', ['build']);
 
     // Step 3: Validate
     console.log('\n✅ Step 3: Validating configuration consistency...');
@@ -41,7 +41,7 @@ async function runCommand(command, args) {
     const child = spawn(command, args, {
       stdio: 'inherit',
       cwd: path.join(__dirname, '..'),
-      shell: true // ✅ makes npm work on Windows
+      shell: true
     });
 
     child.on('close', (code) => {
