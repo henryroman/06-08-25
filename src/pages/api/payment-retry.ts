@@ -6,7 +6,7 @@ import { siteConfig } from '../../../config/site.config.mjs';
 
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-11-15' as any, // Add 'as any' here
+  apiVersion: '2025-03-31.basil' as any, // Add 'as any' here
 });
 
 function parsePriceStringToCents(priceStr: any) {
